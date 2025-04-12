@@ -6,8 +6,8 @@ load_dotenv()
 
 class Config:
     # 기본 설정
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or '8f42a73054b1749b8e58848e5e3c9d4bfb8c9e7d6a5f4c3b2a1'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://web_app_db_fyrp_user:tevnID7zCvPlwnbo0Xik5UXsYPRNacbG@dpg-cvt4v2h5pdvs739focv0-a.singapore-postgres.render.com/web_app_db_fyrp'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 세션 설정
@@ -17,7 +17,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     
     # 보안 헤더 설정
-    SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT')
+    SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT') or '8f42a73054b1749b8e58848e5e3c9d4bfb8c9e7d6a5f4c3b2a1'
     
     # 파일 업로드 설정
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
@@ -49,9 +49,11 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or 'sqlite:///app.db'
 
 class ProductionConfig(Config):
     DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://web_app_db_fyrp_user:tevnID7zCvPlwnbo0Xik5UXsYPRNacbG@dpg-cvt4v2h5pdvs739focv0-a.singapore-postgres.render.com/web_app_db_fyrp'
 
 config = {
     'development': DevelopmentConfig,
