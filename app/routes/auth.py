@@ -4,42 +4,32 @@ from app.models import User, Link, UserType
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+from werkzeug.urls import url_parse
+from app.forms import LoginForm, RegistrationForm
 
 bp = Blueprint('auth', __name__)
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        if current_user.is_admin:
-            return redirect(url_for('admin.index'))
-        elif current_user.user_type == 'applicant':
-            return redirect(url_for('applicant.index'))
-        else:
-            return redirect(url_for('worker.index'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username')  # 이메일 대신 이름으로 변경
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()  # 이메일 대신 이름으로 검색
-        
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            if user.is_admin:
-                return redirect(url_for('admin.index'))
-            elif user.user_type == 'applicant':
-                return redirect(url_for('applicant.index'))
-            else:
-                return redirect(url_for('worker.index'))
-        else:
+        return redirect(url_for('main.index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
             flash('이름 또는 비밀번호가 올바르지 않습니다.', 'error')
-    
-    return render_template('auth/login.html')
+            return redirect(url_for('auth.login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('main.index')
+        return redirect(next_page)
+    return render_template('auth/login.html', title='로그인', form=form)
 
 @bp.route('/logout')
-@login_required
 def logout():
     logout_user()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('main.index'))
 
 @bp.route('/register_link/<link_code>', methods=['GET', 'POST'])
 def register_link(link_code):
@@ -80,4 +70,18 @@ def register_link(link_code):
             flash('이름, 전화번호 또는 비밀번호가 일치하지 않습니다.', 'error')
             return render_template('auth/register_link.html', link=link)
     
-    return render_template('auth/register_link.html', link=link) 
+    return render_template('auth/register_link.html', link=link)
+
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('회원가입이 완료되었습니다. 로그인해주세요.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/register.html', title='회원가입', form=form) 
