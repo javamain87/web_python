@@ -2,7 +2,7 @@ from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from config import Config
+from config import config, Config
 from dotenv import load_dotenv
 import os
 
@@ -34,6 +34,7 @@ def create_app(config_name=None):
     # 사용자 로더 설정
     @login_manager.user_loader
     def load_user(user_id):
+        from app.models import User
         return User.query.get(int(user_id))
     
     # 블루프린트 등록
