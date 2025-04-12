@@ -24,6 +24,7 @@ def create_app(config_name=None):
     
     # 데이터베이스 초기화
     db.init_app(app)
+    migrate.init_app(app, db)
     
     # 로그인 매니저 초기화
     login_manager.init_app(app)
