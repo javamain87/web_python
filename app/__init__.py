@@ -48,7 +48,11 @@ def create_app(config_name=None):
     # 데이터베이스 마이그레이션 실행
     with app.app_context():
         from flask_migrate import upgrade
-        upgrade()
+        try:
+            upgrade()
+            print("Database migration completed successfully")
+        except Exception as e:
+            print(f"Error during database migration: {str(e)}")
     
     return app
 

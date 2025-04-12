@@ -7,7 +7,7 @@ load_dotenv()
 class Config:
     # 기본 설정
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://') or 'postgresql://postgres@localhost/web'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://') or 'postgresql://web_app_db_fyrp_user:tevnID7zCvPlwnbo0Xik5UXsYPRNacbG@dpg-cvt4v2h5pdvs739focv0-a.singapore-postgres.render.com/web_app_db_fyrp'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 세션 설정
@@ -50,7 +50,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or 'postgresql://postgres@localhost/web'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or 'postgresql://web_app_db_fyrp_user:tevnID7zCvPlwnbo0Xik5UXsYPRNacbG@dpg-cvt4v2h5pdvs739focv0-a.singapore-postgres.render.com/web_app_db_fyrp'
 
 class ProductionConfig(Config):
     DEBUG = False
