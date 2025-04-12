@@ -12,18 +12,27 @@ bp = Blueprint('auth', __name__)
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        if current_user.is_admin:
+            return redirect(url_for('admin.index'))
+        return redirect(url_for('auth.login'))
+    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('이름 또는 비밀번호가 올바르지 않습니다.', 'error')
             return redirect(url_for('auth.login'))
+        
         login_user(user, remember=form.remember_me.data)
+        
+        if user.is_admin:
+            return redirect(url_for('admin.index'))
+        
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('main.index')
+            next_page = url_for('auth.login')
         return redirect(next_page)
+    
     return render_template('auth/login.html', title='로그인', form=form)
 
 @bp.route('/logout')
