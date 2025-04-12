@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User
+from app.models import User, Link, WorkLog
 from dotenv import load_dotenv
 
 # 환경 변수 로드
@@ -36,19 +36,10 @@ def init_db():
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User}
+    return {'db': db, 'User': User, 'Link': Link, 'WorkLog': WorkLog}
 
 if __name__ == '__main__':
     with app.app_context():
         init_db()  # Initialize database and create admin account
     
-    # SSL 컨텍스트 생성
-    context = ('cert.pem', 'key.pem')  # 인증서와 키 파일
-    
-    app.run(
-        host='0.0.0.0',
-        port=5001,
-        debug=True,
-        threaded=True,
-        ssl_context=context
-    )
+    app.run(host='0.0.0.0', port=5001, ssl_context='adhoc')
