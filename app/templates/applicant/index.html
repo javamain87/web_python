@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}신청자 대시보드{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>신청자 대시보드</h1>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">내 정보</h5>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <p><strong>이름:</strong> {{ current_user.username }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>전화번호:</strong> {{ current_user.phone_number }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>계좌번호:</strong> {{ current_user.account_number }}</p>
+                    </div>
+                </div>
+                
+                <h5 class="card-title">내 링크 목록</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>링크 코드</th>
+                                <th>작업자</th>
+                                <th>생성일</th>
+                                <th>상태</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for link in links %}
+                            <tr>
+                                <td>{{ link.link_code }}</td>
+                                <td>{{ link.worker.username }}</td>
+                                <td>{% if link.created_at %}{{ link.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}</td>
+                                <td>
+                                    {% if link.is_active %}
+                                        <span class="badge bg-success">활성</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">비활성</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('applicant.view_link', link_code=link.link_code) }}" class="btn btn-sm btn-outline-primary">상세보기</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

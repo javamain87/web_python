@@ -1,0 +1,56 @@
+/* 전체 스타일 */
+body {
+    background-color: #f8f9fa;
+}
+
+/* 네비게이션 바 스타일 */
+.navbar {
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+/* 카드 스타일 */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    border: none;
+    margin-bottom: 2rem;
+}
+
+.card-title {
+    color: #333;
+    font-weight: 600;
+}
+
+/* 테이블 스타일 */
+.table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* 버튼 스타일 */
+.btn-outline-primary {
+    margin-right: 0.5rem;
+}
+
+/* 알림 메시지 스타일 */
+.alert {
+    margin-bottom: 2rem;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+} 

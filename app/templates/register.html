@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}링크 등록{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>링크 등록</h1>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.register_link', link_code=link_code) }}">
+                    <div class="mb-3">
+                        <label for="link_password" class="form-label">링크 비밀번호</label>
+                        <input type="password" class="form-control" id="link_password" name="link_password" required>
+                        <div class="form-text">관리자로부터 받은 링크 비밀번호를 입력하세요.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">이름</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">전화번호</label>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                               pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" 
+                               placeholder="010-1234-5678" required>
+                        <div class="form-text">형식: 010-1234-5678</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="account_number" class="form-label">계좌번호</label>
+                        <input type="text" class="form-control" id="account_number" name="account_number" required>
+                        <div class="form-text">은행명과 계좌번호를 입력하세요. (예: 신한은행 110-123-456789)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">로그인 비밀번호</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               minlength="8" required>
+                        <div class="form-text">최소 8자 이상의 비밀번호를 설정하세요.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">등록하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 3) {
+        value = value.slice(0,3) + '-' + value.slice(3);
+    }
+    if (value.length >= 8) {
+        value = value.slice(0,8) + '-' + value.slice(8);
+    }
+    e.target.value = value.slice(0,13);
+});
+</script>
+{% endblock %}
+
+{% endblock %} 

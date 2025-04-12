@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}작업 현황{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">작업 현황</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>신청자 정보</h5>
+                        <p><strong>이름:</strong> {{ link.applicant.username }}</p>
+                        <p><strong>연락처:</strong> {{ link.applicant.phone_number }}</p>
+                        <p><strong>계좌번호:</strong> {{ link.applicant.account_number }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>작업자 계좌번호 업데이트</h5>
+                        <form method="POST" action="{{ url_for('worker.update_account', link_code=link.link_code) }}">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" name="account_number" 
+                                       value="{{ link.worker.account_number }}" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">계좌번호 저장</button>
+                        </form>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="card-title">작업 내용 입력</h5>
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="work_date" class="form-label">작업 날짜</label>
+                                <input type="date" class="form-control" id="work_date" name="work_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="start_time" class="form-label">시작 시간</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="end_time" class="form-label">종료 시간</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="break_time" class="form-label">휴식 시간 (분)</label>
+                                <input type="number" class="form-control" id="break_time" name="break_time" min="0" value="0">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">작업 내용</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">저장</button>
+                        </form>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>작업 로그</h5>
+                        <div class="list-group">
+                            {% for log in work_logs %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">작업 내용</h6>
+                                    <small>{% if log.created_at %}{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}</small>
+                                </div>
+                                <p class="mb-1">{{ log.content }}</p>
+                            </div>
+                            {% else %}
+                            <div class="list-group-item">
+                                <p class="mb-0">작업 로그가 없습니다.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

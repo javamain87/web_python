@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}SMS 전송{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>SMS 전송</h1>
+            <a href="{{ url_for('admin.links') }}" class="btn btn-outline-secondary">목록으로 돌아가기</a>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.send_link', link_id=link.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">신청자 정보</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="{{ link.applicant.username }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="{{ link.applicant.phone_number }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">작업자 정보</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="{{ link.worker.username }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="{{ link.worker.phone_number }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">메시지 내용</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required>안녕하세요, {{ link.worker.username }}님. 
+{{ link.applicant.username }}님의 작업 요청이 있습니다. 
+아래 링크를 통해 상세 내용을 확인해주세요.
+{{ url_for('auth.register_link', link_code=link.link_code, _external=True) }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">SMS 전송</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

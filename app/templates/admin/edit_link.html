@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}링크 수정{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>링크 수정</h1>
+            <a href="{{ url_for('admin.links') }}" class="btn btn-secondary">목록으로</a>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_link', link_id=link.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h4>신청자 정보</h4>
+                            <div class="mb-3">
+                                <label for="applicant_username" class="form-label">이름</label>
+                                <input type="text" class="form-control" id="applicant_username" name="applicant_username" value="{{ link.applicant.username }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="applicant_phone" class="form-label">전화번호</label>
+                                <input type="tel" class="form-control" id="applicant_phone" name="applicant_phone" 
+                                       pattern="[0-9]{11}" 
+                                       placeholder="01012345678" 
+                                       value="{{ link.applicant.phone_number }}" required>
+                                <div class="form-text">숫자만 입력해주세요 (예: 01012345678)</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="applicant_account" class="form-label">계좌번호</label>
+                                <input type="text" class="form-control" id="applicant_account" name="applicant_account" value="{{ link.applicant.account }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>작업자 정보</h4>
+                            <div class="mb-3">
+                                <label for="worker_username" class="form-label">이름</label>
+                                <input type="text" class="form-control" id="worker_username" name="worker_username" value="{{ link.worker.username }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="worker_phone" class="form-label">전화번호</label>
+                                <input type="tel" class="form-control" id="worker_phone" name="worker_phone" 
+                                       pattern="[0-9]{11}" 
+                                       placeholder="01012345678" 
+                                       value="{{ link.worker.phone_number }}" required>
+                                <div class="form-text">숫자만 입력해주세요 (예: 01012345678)</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="worker_account" class="form-label">계좌번호</label>
+                                <input type="text" class="form-control" id="worker_account" name="worker_account" value="{{ link.worker.account }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if link.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">링크 활성화</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">수정 완료</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
