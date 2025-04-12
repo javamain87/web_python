@@ -46,3 +46,6 @@ def create_app(config_class=Config):
         return redirect(url_for('auth.login'))
 
     return app
+
+# Create app instance
+app = create_app()
