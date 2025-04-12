@@ -1,10 +1,13 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     # 기본 설정
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 세션 설정
@@ -18,7 +21,8 @@ class Config:
     
     # 파일 업로드 설정
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    UPLOAD_FOLDER = 'uploads'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     
     # Twilio 설정
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
