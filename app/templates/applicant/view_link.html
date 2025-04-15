@@ -13,9 +13,6 @@
                 <p><strong>이름:</strong> {{ link.worker.username }}</p>
                 <p><strong>연락처:</strong> {{ link.worker.phone_number }}</p>
             </div>
-            <div class="col-md-6">
-                <p><strong>계좌번호:</strong> {{ link.worker.account_number }}</p>
-            </div>
         </div>
     </div>
 </div>
@@ -46,19 +43,13 @@
                 <thead>
                     <tr>
                         <th>작업일</th>
-                        <th>시작시간</th>
-                        <th>종료시간</th>
-                        <th>휴식시간</th>
                         <th>작업내용</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for log in work_logs %}
                     <tr>
-                        <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ log.start_time.strftime('%H:%M') if log.start_time else '-' }}</td>
-                        <td>{{ log.end_time.strftime('%H:%M') if log.end_time else '-' }}</td>
-                        <td>{{ log.break_time }}분</td>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>{{ log.description }}</td>
                     </tr>
                     {% endfor %}

@@ -246,4 +246,15 @@ def send_link(link_id):
     else:
         flash('SMS 전송 중 오류가 발생했습니다.', 'error')
     
-    return redirect(url_for('admin.links')) 
+    return redirect(url_for('admin.links'))
+
+@bp.route('/link/<link_code>')
+def view_link(link_code):
+    link = Link.query.filter_by(link_code=link_code).first_or_404()
+    
+    # 작업 로그 가져오기 (최신순으로 정렬)
+    work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
+    
+    return render_template('admin/view_link.html', 
+                         link=link,
+                         work_logs=work_logs) 
