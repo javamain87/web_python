@@ -69,20 +69,14 @@
                             <thead>
                                 <tr>
                                     <th>작업일</th>
-                                    <th>시작시간</th>
-                                    <th>종료시간</th>
-                                    <th>휴식시간</th>
                                     <th>작업내용</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for log in work_logs %}
                                 <tr>
-                                    <td>{{ log.work_date.strftime('%Y-%m-%d') if log.work_date else '-' }}</td>
-                                    <td>{{ log.start_time.strftime('%H:%M') if log.start_time else '-' }}</td>
-                                    <td>{{ log.end_time.strftime('%H:%M') if log.end_time else '-' }}</td>
-                                    <td>{{ log.break_time }}분</td>
-                                    <td>{{ log.content }}</td>
+                                    <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ log.description }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

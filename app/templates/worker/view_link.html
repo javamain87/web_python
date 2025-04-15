@@ -69,7 +69,7 @@
                         {% for log in work_logs %}
                         <tr>
                             <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ log.content }}</td>
+                            <td>{{ log.description }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
