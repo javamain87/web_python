@@ -18,5 +18,22 @@ def view_link(link_code):
         flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
         return redirect(url_for('main.index'))
     
-    # 관리자용 공개 링크로 리다이렉트
-    return redirect(url_for('admin.public_view_link', link_code=link_code)) 
+    # 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+    
+    # 관리자인 경우
+    if current_user.is_administrator():
+        return redirect(url_for('admin.view_link', link_code=link_code))
+    
+    # 신청자인 경우
+    if current_user.user_type == 'applicant' and current_user.id == link.applicant_id:
+        return redirect(url_for('applicant.view_link', link_code=link_code))
+    
+    # 작업자인 경우
+    if current_user.user_type == 'worker' and current_user.id == link.worker_id:
+        return redirect(url_for('worker.view_link', link_code=link_code))
+    
+    # 권한이 없는 경우
+    flash('이 링크에 접근할 권한이 없습니다.', 'error')
+    return redirect(url_for('main.index')) 

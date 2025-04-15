@@ -111,10 +111,10 @@ def create_link():
         db.session.add(link)
         db.session.commit()
         
-        # 공개 링크 URL 생성
-        public_link = url_for('admin.public_view_link', link_code=link_code, _external=True)
+        # 링크 URL 생성
+        link_url = url_for('main.view_link', link_code=link_code, _external=True)
         
-        flash(f'링크가 생성되었습니다. 공개 링크: {public_link}', 'success')
+        flash(f'링크가 생성되었습니다. 링크: {link_url}', 'success')
         return redirect(url_for('admin.links'))
     
     return render_template('admin/create_link.html', form=form)
