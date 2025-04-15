@@ -79,6 +79,14 @@ def links():
 @admin_required
 def create_link():
     form = LinkForm()
+    
+    # 신청자와 작업자 목록 채우기
+    applicants = User.query.filter_by(user_type='applicant').all()
+    workers = User.query.filter_by(user_type='worker').all()
+    
+    form.applicant_id.choices = [(a.id, a.username) for a in applicants]
+    form.worker_id.choices = [(w.id, w.username) for w in workers]
+    
     if form.validate_on_submit():
         # 신청자와 작업자 선택 확인
         if not form.applicant_id.data or not form.worker_id.data:
