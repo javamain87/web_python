@@ -56,6 +56,29 @@
         </div>
     </div>
 
+    <!-- 작업 내용 입력 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">작업 내용 입력</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('worker.add_work_log', link_code=link.link_code) }}" method="POST">
+                        <div class="mb-3">
+                            <label for="content" class="form-label">작업 내용</label>
+                            <textarea class="form-control" id="content" name="content" rows="3" required 
+                                    placeholder="오늘 진행한 작업 내용을 입력해주세요."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-pencil"></i> 작업 내용 저장
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 작업 로그 -->
     <div class="row">
         <div class="col-12">
@@ -109,6 +132,9 @@
         }
         .form-control {
             font-size: 0.9rem;
+        }
+        textarea.form-control {
+            min-height: 100px;
         }
     }
 </style>
