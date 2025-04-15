@@ -38,6 +38,49 @@
 
 <div class="card mt-4">
     <div class="card-header">
+        <h5 class="mb-0">작업 이력 입력</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('worker.add_work_log', link_code=link.link_code) }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="work_date" class="form-label">작업일</label>
+                        <input type="date" class="form-control" id="work_date" name="work_date" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="break_time" class="form-label">휴식시간 (분)</label>
+                        <input type="number" class="form-control" id="break_time" name="break_time" min="0" value="0" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="start_time" class="form-label">시작시간</label>
+                        <input type="time" class="form-control" id="start_time" name="start_time" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="end_time" class="form-label">종료시간</label>
+                        <input type="time" class="form-control" id="end_time" name="end_time" required>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">작업내용</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">작업 이력 저장</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
         <h5 class="mb-0">작업 로그</h5>
     </div>
     <div class="card-body">
