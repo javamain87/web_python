@@ -67,34 +67,31 @@ def update_account(link_code):
 @worker_required
 def create_work_log(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
-    
     if not link.is_active:
         flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
         return redirect(url_for('main.index'))
-    
+
     work_date = request.form.get('work_date')
-    content = request.form.get('description')  # 폼에서는 description으로 받지만 content로 저장
-    
-    if not work_date or not content:
+    description = request.form.get('description')
+
+    if not work_date or not description:
         flash('작업 날짜와 작업 내용을 모두 입력해주세요.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
-    
+
     try:
         work_date = datetime.strptime(work_date, '%Y-%m-%d').date()
     except ValueError:
         flash('올바른 날짜 형식이 아닙니다.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
-    
-    # 작업 로그 생성
+
     work_log = WorkLog(
         link_id=link.id,
         work_date=work_date,
-        content=content,  # content 필드에 저장
+        description=description,
         worker_id=current_user.id
     )
-    
     db.session.add(work_log)
     db.session.commit()
-    
+
     flash('작업 내용이 저장되었습니다.', 'success')
     return redirect(url_for('worker.view_link', link_code=link_code)) 
