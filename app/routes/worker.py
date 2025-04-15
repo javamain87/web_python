@@ -37,7 +37,7 @@ def view_link(link_code):
         flash('작업자 정보가 없습니다.', 'error')
         return redirect(url_for('auth.login'))
     
-    # 작업 로그 가져오기
+    # 작업 로그 가져오기 (최신순으로 정렬)
     work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
     
     return render_template('worker/view_link.html', 
@@ -102,30 +102,23 @@ def add_work_log(link_code):
         flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
         return redirect(url_for('auth.login'))
     
-    work_date = request.form.get('work_date')
-    start_time = request.form.get('start_time')
-    end_time = request.form.get('end_time')
-    break_time = request.form.get('break_time')
     description = request.form.get('description')
     
-    if not all([work_date, start_time, end_time, break_time, description]):
-        flash('모든 필드를 입력해주세요.', 'error')
+    if not description:
+        flash('작업 내용을 입력해주세요.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
     
     try:
         work_log = WorkLog(
             link_id=link.id,
-            work_date=datetime.strptime(work_date, '%Y-%m-%d').date(),
-            start_time=datetime.strptime(start_time, '%H:%M').time(),
-            end_time=datetime.strptime(end_time, '%H:%M').time(),
-            break_time=int(break_time),
-            description=description
+            description=description,
+            created_at=datetime.utcnow()
         )
         db.session.add(work_log)
         db.session.commit()
-        flash('작업 이력이 저장되었습니다.', 'success')
+        flash('작업 내용이 저장되었습니다.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash('작업 이력 저장 중 오류가 발생했습니다.', 'error')
+        flash('작업 내용 저장 중 오류가 발생했습니다.', 'error')
     
     return redirect(url_for('worker.view_link', link_code=link_code)) 
