@@ -3,59 +3,113 @@
 {% block title %}작업 현황{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">작업자 정보</h5>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">작업 현황</h2>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>이름:</strong> {{ link.worker.username }}</p>
-                <p><strong>연락처:</strong> {{ link.worker.phone_number }}</p>
+
+    <div class="row">
+        <!-- 작업자 정보 -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">작업자 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>이름</th>
+                                <td>{{ link.worker_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>연락처</th>
+                                <td>{{ link.worker_phone }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신청자 계좌번호 업데이트 -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">신청자 계좌번호 업데이트</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('applicant.update_account', link_code=link.link_code) }}" method="POST">
+                        <div class="mb-3">
+                            <label for="account_number" class="form-label">계좌번호</label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" 
+                                   value="{{ link.applicant.account_number or '' }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-save"></i> 계좌번호 저장
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 작업 로그 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">작업 로그</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>작업일</th>
+                                    <th>시작시간</th>
+                                    <th>종료시간</th>
+                                    <th>휴식시간</th>
+                                    <th>작업내용</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in work_logs %}
+                                <tr>
+                                    <td>{{ log.work_date.strftime('%Y-%m-%d') if log.work_date else '-' }}</td>
+                                    <td>{{ log.start_time.strftime('%H:%M') if log.start_time else '-' }}</td>
+                                    <td>{{ log.end_time.strftime('%H:%M') if log.end_time else '-' }}</td>
+                                    <td>{{ log.break_time }}분</td>
+                                    <td>{{ log.content }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="mb-0">신청자 계좌번호 업데이트</h5>
-    </div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('applicant.update_account', link_code=link.link_code) }}">
-            <div class="mb-3">
-                <label for="account_number" class="form-label">계좌번호</label>
-                <input type="text" class="form-control" id="account_number" name="account_number" 
-                       value="{{ current_user.account_number }}" required>
-            </div>
-            <button type="submit" class="btn btn-primary">계좌번호 저장</button>
-        </form>
-    </div>
-</div>
-
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="mb-0">작업 로그</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>작업일</th>
-                        <th>작업내용</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in work_logs %}
-                    <tr>
-                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ log.description }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<style>
+    @media (max-width: 768px) {
+        .card {
+            margin-bottom: 1rem;
+        }
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            font-size: 0.9rem;
+        }
+    }
+</style>
 {% endblock %} 

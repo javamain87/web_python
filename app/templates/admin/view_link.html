@@ -3,65 +3,128 @@
 {% block title %}링크 상세 정보{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">신청자 정보</h5>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">링크 상세 정보</h2>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>이름:</strong> {{ link.applicant.username }}</p>
-                    <p><strong>연락처:</strong> {{ link.applicant.phone_number }}</p>
-                    <p><strong>계좌번호:</strong> {{ link.applicant.account_number }}</p>
+    </div>
+
+    <div class="row">
+        <!-- 신청자 정보 -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">신청자 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>이름</th>
+                                <td>{{ link.applicant_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>연락처</th>
+                                <td>{{ link.applicant_phone }}</td>
+                            </tr>
+                            <tr>
+                                <th>계좌번호</th>
+                                <td>{{ link.applicant.account_number or '미등록' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업자 정보 -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">작업자 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>이름</th>
+                                <td>{{ link.worker_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>연락처</th>
+                                <td>{{ link.worker_phone }}</td>
+                            </tr>
+                            <tr>
+                                <th>계좌번호</th>
+                                <td>{{ link.worker.account_number or '미등록' }}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">작업자 정보</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>이름:</strong> {{ link.worker.username }}</p>
-                    <p><strong>연락처:</strong> {{ link.worker.phone_number }}</p>
-                    <p><strong>계좌번호:</strong> {{ link.worker.account_number }}</p>
+    <!-- 작업 로그 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">작업 로그</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>작업일</th>
+                                    <th>시작시간</th>
+                                    <th>종료시간</th>
+                                    <th>휴식시간</th>
+                                    <th>작업내용</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in work_logs %}
+                                <tr>
+                                    <td>{{ log.work_date.strftime('%Y-%m-%d') if log.work_date else '-' }}</td>
+                                    <td>{{ log.start_time.strftime('%H:%M') if log.start_time else '-' }}</td>
+                                    <td>{{ log.end_time.strftime('%H:%M') if log.end_time else '-' }}</td>
+                                    <td>{{ log.break_time }}분</td>
+                                    <td>{{ log.content }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">작업 로그</h5>
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{{ url_for('admin.links') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 목록으로 돌아가기
+            </a>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>작업일</th>
-                            <th>작업내용</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in work_logs %}
-                        <tr>
-                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>{{ log.description }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-4">
-        <a href="{{ url_for('admin.links') }}" class="btn btn-secondary">목록으로</a>
     </div>
 </div>
+
+<style>
+    @media (max-width: 768px) {
+        .card {
+            margin-bottom: 1rem;
+        }
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
 {% endblock %} 
