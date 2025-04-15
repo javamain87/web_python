@@ -235,6 +235,13 @@ def public_view_link(link_code):
     # 작업 로그 가져오기 (최신순으로 정렬)
     work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
     
+    # 신청자와 작업자 정보 가져오기
+    applicant = User.query.get(link.applicant_id)
+    worker = User.query.get(link.worker_id)
+    
     return render_template('admin/view_link.html', 
                          link=link,
-                         work_logs=work_logs) 
+                         work_logs=work_logs,
+                         applicant=applicant,
+                         worker=worker,
+                         is_public=True) 
