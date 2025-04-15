@@ -249,6 +249,8 @@ def send_link(link_id):
     return redirect(url_for('admin.links'))
 
 @bp.route('/link/<link_code>')
+@login_required
+@admin_required
 def view_link(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
     
