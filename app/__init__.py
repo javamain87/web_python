@@ -39,11 +39,12 @@ def create_app(config_name=None):
         return User.query.get(int(user_id))
     
     # 블루프린트 등록
-    from app.routes import auth, admin, applicant, worker
+    from app.routes import auth, admin, applicant, worker, main
     app.register_blueprint(auth.bp)
     app.register_blueprint(admin.bp)
     app.register_blueprint(applicant.bp)
     app.register_blueprint(worker.bp)
+    app.register_blueprint(main.bp)
     
     # 데이터베이스 마이그레이션 실행
     with app.app_context():
