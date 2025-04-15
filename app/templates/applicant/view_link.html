@@ -1,62 +1,69 @@
-{% extends "base.html" %}
+{% extends "base_link.html" %}
 
 {% block title %}작업 현황{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">작업 현황</h4>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h5>작업자 정보</h5>
-                        <p><strong>이름:</strong> {{ link.worker.username }}</p>
-                        <p><strong>연락처:</strong> {{ link.worker.phone_number }}</p>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h5>신청자 계좌번호 업데이트</h5>
-                        <form method="POST" action="{{ url_for('applicant.update_account', link_code=link.link_code) }}">
-                            <div class="mb-3">
-                                <input type="text" class="form-control" name="account_number" 
-                                       value="{{ link.applicant.account_number }}" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">계좌번호 저장</button>
-                        </form>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h5>작업 로그</h5>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>작업 날짜</th>
-                                        <th>시작 시간</th>
-                                        <th>종료 시간</th>
-                                        <th>휴식 시간</th>
-                                        <th>작업 내용</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for log in link.work_logs %}
-                                    <tr>
-                                        <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
-                                        <td>{% if log.start_time %}{{ log.start_time.strftime('%H:%M') }}{% else %}-{% endif %}</td>
-                                        <td>{% if log.end_time %}{{ log.end_time.strftime('%H:%M') }}{% else %}-{% endif %}</td>
-                                        <td>{{ log.break_time }}분</td>
-                                        <td>{{ log.description }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">작업자 정보</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>이름:</strong> {{ link.worker.username }}</p>
+                <p><strong>연락처:</strong> {{ link.worker.phone_number }}</p>
             </div>
+            <div class="col-md-6">
+                <p><strong>계좌번호:</strong> {{ link.worker.account_number }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">신청자 계좌번호 업데이트</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('applicant.update_account', link_code=link.link_code) }}">
+            <div class="mb-3">
+                <label for="account_number" class="form-label">계좌번호</label>
+                <input type="text" class="form-control" id="account_number" name="account_number" 
+                       value="{{ current_user.account_number }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">계좌번호 저장</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">작업 로그</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>작업일</th>
+                        <th>시작시간</th>
+                        <th>종료시간</th>
+                        <th>휴식시간</th>
+                        <th>작업내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in work_logs %}
+                    <tr>
+                        <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ log.start_time.strftime('%H:%M') if log.start_time else '-' }}</td>
+                        <td>{{ log.end_time.strftime('%H:%M') if log.end_time else '-' }}</td>
+                        <td>{{ log.break_time }}분</td>
+                        <td>{{ log.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
