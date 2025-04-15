@@ -8,6 +8,7 @@ from datetime import datetime
 from twilio.rest import Client
 import os
 import socket
+from app.forms import LinkForm
 
 # Twilio 계정 정보
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -73,88 +74,42 @@ def links():
     links = Link.query.all()
     return render_template('admin/links.html', links=links)
 
-@bp.route('/links/create', methods=['GET', 'POST'])
+@bp.route('/create_link', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def create_link():
-    if request.method == 'GET':
-        return render_template('admin/create_link.html')
+    form = LinkForm()
+    if form.validate_on_submit():
+        # 신청자와 작업자 선택 확인
+        if not form.applicant_id.data or not form.worker_id.data:
+            flash('신청자와 작업자를 모두 선택해주세요.', 'error')
+            return render_template('admin/create_link.html', form=form)
         
-    if request.method == 'POST':
-        try:
-            # Get form data
-            applicant_name = request.form.get('applicant_name')
-            worker_name = request.form.get('worker_name')
-            applicant_phone = request.form.get('applicant_phone')
-            worker_phone = request.form.get('worker_phone')
-            applicant_account = request.form.get('applicant_account')
-            worker_account = request.form.get('worker_account')
-            
-            # Create users if they don't exist
-            applicant = User.query.filter_by(username=applicant_name).first()
-            if not applicant:
-                applicant = User(
-                    email=f"{applicant_name.replace(' ', '_').lower()}@example.com",
-                    username=applicant_name,
-                    phone_number=applicant_phone,
-                    account_number=applicant_account if applicant_account else None,
-                    user_type='applicant'
-                )
-                applicant.set_password('default123')  # 기본 비밀번호 설정
-                db.session.add(applicant)
-            
-            worker = User.query.filter_by(username=worker_name).first()
-            if not worker:
-                worker = User(
-                    email=f"{worker_name.replace(' ', '_').lower()}@example.com",
-                    username=worker_name,
-                    phone_number=worker_phone,
-                    account_number=worker_account if worker_account else None,
-                    user_type='worker'
-                )
-                worker.set_password('default123')  # 기본 비밀번호 설정
-                db.session.add(worker)
-            
-            # Create link
-            link_code = secrets.token_urlsafe(16)
-            link_password = request.form.get('link_password')
-            
-            link = Link(
-                link_code=link_code,
-                password=link_password,  # 직접 password 설정
-                link_type='work',
-                applicant=applicant,
-                worker=worker,
-                admin_id=current_user.id,
-                applicant_name=applicant_name,
-                applicant_phone=applicant_phone,
-                worker_name=worker_name,
-                worker_phone=worker_phone
-            )
-            db.session.add(link)
-            
-            # Create work log
-            log = WorkLog(
-                link=link,
-                work_date=datetime.now().date(),
-                content=f'Link created for {applicant_name} and {worker_name}',
-                action='create',
-                details=f'Created by {current_user.username}',
-                worker_id=worker.id
-            )
-            db.session.add(log)
-            
-            db.session.commit()
-            
-            # TODO: Send SMS to applicant and worker
-            
-            flash('링크가 성공적으로 생성되었습니다.', 'success')
-            return redirect(url_for('admin.links'))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'에러가 발생했습니다: {str(e)}', 'danger')
-            return render_template('admin/create_link.html')
+        # 링크 코드 생성
+        link_code = secrets.token_urlsafe(16)
+        
+        # 링크 생성
+        link = Link(
+            link_code=link_code,
+            applicant_id=form.applicant_id.data,
+            worker_id=form.worker_id.data,
+            applicant_name=form.applicant_name.data,
+            applicant_phone=form.applicant_phone.data,
+            worker_name=form.worker_name.data,
+            worker_phone=form.worker_phone.data,
+            link_type='work'
+        )
+        
+        db.session.add(link)
+        db.session.commit()
+        
+        # 공개 링크 URL 생성
+        public_link = url_for('admin.public_view_link', link_code=link_code, _external=True)
+        
+        flash(f'링크가 생성되었습니다. 공개 링크: {public_link}', 'success')
+        return redirect(url_for('admin.links'))
+    
+    return render_template('admin/create_link.html', form=form)
 
 @bp.route('/links/<int:link_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -253,6 +208,21 @@ def send_link(link_id):
 @admin_required
 def view_link(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
+    
+    # 작업 로그 가져오기 (최신순으로 정렬)
+    work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
+    
+    return render_template('admin/view_link.html', 
+                         link=link,
+                         work_logs=work_logs)
+
+@bp.route('/public/link/<link_code>')
+def public_view_link(link_code):
+    link = Link.query.filter_by(link_code=link_code).first_or_404()
+    
+    if not link.is_active:
+        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
+        return redirect(url_for('main.index'))
     
     # 작업 로그 가져오기 (최신순으로 정렬)
     work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
