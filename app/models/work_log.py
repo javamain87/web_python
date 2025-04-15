@@ -6,9 +6,9 @@ class WorkLog(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     work_date = db.Column(db.Date, nullable=False)  # 작업 날짜
+    description = db.Column(db.Text)  # 작업 내용
     start_time = db.Column(db.Time, nullable=True)  # 시작 시간
     end_time = db.Column(db.Time, nullable=True)    # 종료 시간
-    content = db.Column(db.Text)
     action = db.Column(db.String(64))  # create, update, delete 등의 액션
     details = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
