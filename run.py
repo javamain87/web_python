@@ -40,8 +40,6 @@ def make_shell_context():
     return {'db': db, 'User': User, 'Link': Link, 'WorkLog': WorkLog}
 
 if __name__ == '__main__':
-    with app.app_context():
-        init_db()  # Initialize database and create admin account
-    
+    init_db()  # Initialize database and create admin account
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
