@@ -73,9 +73,9 @@ def create_work_log(link_code):
         return redirect(url_for('main.index'))
     
     work_date = request.form.get('work_date')
-    description = request.form.get('description')
+    content = request.form.get('description')  # 폼에서는 description으로 받지만 content로 저장
     
-    if not work_date or not description:
+    if not work_date or not content:
         flash('작업 날짜와 작업 내용을 모두 입력해주세요.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
     
@@ -89,7 +89,7 @@ def create_work_log(link_code):
     work_log = WorkLog(
         link_id=link.id,
         work_date=work_date,
-        description=description,
+        content=content,  # content 필드에 저장
         worker_id=current_user.id
     )
     

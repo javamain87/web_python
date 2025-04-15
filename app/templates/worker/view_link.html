@@ -10,8 +10,8 @@
             <h5 class="mb-0">신청자 정보</h5>
         </div>
         <div class="card-body">
-            <p><strong>이름:</strong> {{ link.applicant.name }}</p>
-            <p><strong>연락처:</strong> {{ link.applicant.phone }}</p>
+            <p><strong>이름:</strong> {{ link.applicant.username }}</p>
+            <p><strong>연락처:</strong> {{ link.applicant.phone_number }}</p>
         </div>
     </div>
 
@@ -69,7 +69,7 @@
                         {% for log in work_logs %}
                         <tr>
                             <td>{{ log.work_date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ log.description }}</td>
+                            <td>{{ log.content }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
