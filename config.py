@@ -11,10 +11,14 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 세션 설정
-    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)  # 세션 유효 시간을 30분으로 단축
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_DURATION = timedelta(minutes=30)  # remember me 쿠키 유효 시간도 30분으로 단축
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
     
     # 보안 헤더 설정
     SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT') or '8f42a73054b1749b8e58848e5e3c9d4bfb8c9e7d6a5f4c3b2a1'

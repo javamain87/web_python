@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User, Link, UserType
 from app import db
@@ -38,7 +38,13 @@ def login():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('main.index'))
+    # 세션을 완전히 삭제
+    session.clear()
+    # 쿠키 삭제
+    response = redirect(url_for('auth.login'))
+    response.delete_cookie('session')
+    response.delete_cookie('remember_token')
+    return response
 
 @bp.route('/register_link/<link_code>', methods=['GET', 'POST'])
 def register_link(link_code):
