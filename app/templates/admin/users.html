@@ -2,51 +2,167 @@
 
 {% block title %}사용자 관리{% endblock %}
 
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .user-table-container {
+        padding: 0;
+    }
+    
+    /* 모바일 최적화 스타일 */
+    @media screen and (max-width: 768px) {
+        .dataTables_wrapper .dataTables_length {
+            float: left;
+            margin-bottom: 10px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            margin-bottom: 10px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            width: 120px;
+        }
+
+        /* 테이블 셀 디자인 */
+        .user-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .user-card .user-info {
+            margin-bottom: 10px;
+        }
+        
+        .user-card .user-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            font-size: 0.875rem;
+        }
+        
+        .user-email {
+            color: #666;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .user-id {
+            color: #888;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">사용자 관리</h1>
         <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>사용자명</th>
-                                <th>이메일</th>
-                                <th>권한</th>
-                                <th>작업</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                            <tr>
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.username }}</td>
-                                <td>{{ user.email }}</td>
-                                <td>
-                                    {% if user.is_admin %}
-                                    <span class="badge bg-primary">관리자</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">일반 사용자</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary">수정</button>
-                                    <button class="btn btn-sm btn-outline-danger">삭제</button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center">등록된 사용자가 없습니다.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card-body user-table-container">
+                <table id="userTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>사용자명</th>
+                            <th>이메일</th>
+                            <th>권한</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                <span class="badge bg-primary">관리자</span>
+                                {% else %}
+                                <span class="badge bg-secondary">일반 사용자</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">수정</button>
+                                <button class="btn btn-sm btn-outline-danger">삭제</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">등록된 사용자가 없습니다.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTable = $('#userTable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json'
+        },
+        order: [[0, 'desc']],
+        pageLength: 10,
+        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        responsive: {
+            details: {
+                display: $.fn.dataTable.Responsive.display.childRow,
+                type: 'column',
+                renderer: function(api, rowIdx, columns) {
+                    const data = columns.reduce((acc, col) => {
+                        if (col.hidden) {
+                            acc[col.title] = col.data;
+                        }
+                        return acc;
+                    }, {});
+                    
+                    // 모바일용 카드 뷰 생성
+                    return `
+                        <div class="user-card">
+                            <div class="user-info">
+                                <div class="user-id">ID: ${data['ID']}</div>
+                                <div class="user-name">${data['사용자명']}</div>
+                                <div class="user-email">${data['이메일']}</div>
+                                <div class="mt-2">${data['권한']}</div>
+                            </div>
+                            <div class="user-actions">
+                                ${data['작업']}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %} 
