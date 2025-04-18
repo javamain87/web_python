@@ -13,6 +13,18 @@
     .user-table-container {
         padding: 0;
     }
+
+    /* 버튼 스타일 */
+    .btn-group-actions {
+        display: flex;
+        gap: 8px;  /* 버튼 사이 간격 */
+    }
+
+    .btn-group-actions .btn {
+        flex: 1;  /* 버튼 너비 동일하게 */
+        padding: 4px 12px;
+        font-size: 0.875rem;
+    }
     
     /* 모바일 최적화 스타일 */
     @media screen and (max-width: 768px) {
@@ -45,7 +57,6 @@
         
         .user-card .user-actions {
             display: flex;
-            gap: 10px;
             justify-content: flex-end;
         }
         
@@ -103,8 +114,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary">수정</button>
-                                <button class="btn btn-sm btn-outline-danger">삭제</button>
+                                <div class="btn-group-actions">
+                                    <button class="btn btn-sm btn-outline-primary">수정</button>
+                                    <button class="btn btn-sm btn-outline-danger">삭제</button>
+                                </div>
                             </td>
                         </tr>
                         {% else %}
@@ -155,7 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="mt-2">${data['권한']}</div>
                             </div>
                             <div class="user-actions">
-                                ${data['작업']}
+                                <div class="btn-group-actions">
+                                    ${data['작업']}
+                                </div>
                             </div>
                         </div>
                     `;
