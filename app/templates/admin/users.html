@@ -4,6 +4,19 @@
 
 {% block extra_css %}
 <style>
+    .page-header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
     .card {
         border: none;
         border-radius: 8px;
@@ -11,23 +24,36 @@
     }
     
     .user-table-container {
-        padding: 0;
+        padding: 20px;
     }
 
     /* 버튼 스타일 */
     .btn-group-actions {
         display: flex;
+        flex-direction: column;  /* 세로 배치 */
         gap: 8px;  /* 버튼 사이 간격 */
     }
 
     .btn-group-actions .btn {
-        flex: 1;  /* 버튼 너비 동일하게 */
+        width: 100%;  /* 버튼 너비 100% */
         padding: 4px 12px;
         font-size: 0.875rem;
+        white-space: nowrap;  /* 텍스트 한 줄로 유지 */
+        min-width: 60px;  /* 최소 너비 설정 */
     }
     
     /* 모바일 최적화 스타일 */
     @media screen and (max-width: 768px) {
+        .page-header {
+            margin: 0 -15px 20px -15px;
+            border-radius: 0;
+        }
+
+        .card {
+            margin: 0 -15px;
+            border-radius: 0;
+        }
+
         .dataTables_wrapper .dataTables_length {
             float: left;
             margin-bottom: 10px;
@@ -59,6 +85,11 @@
             display: flex;
             justify-content: flex-end;
         }
+
+        /* 모바일에서 버튼 너비 조정 */
+        .btn-group-actions .btn {
+            min-width: 80px;  /* 모바일에서 버튼 최소 너비 */
+        }
         
         .badge {
             padding: 5px 10px;
@@ -87,7 +118,9 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1 class="mb-4">사용자 관리</h1>
+        <div class="page-header">
+            <h1>사용자 관리</h1>
+        </div>
         <div class="card">
             <div class="card-body user-table-container">
                 <table id="userTable" class="table table-striped">
