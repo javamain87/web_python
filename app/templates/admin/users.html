@@ -6,10 +6,12 @@
 <style>
     .page-header {
         background: white;
-        padding: 20px;
+        padding: 15px 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+        margin: 0 auto 20px auto;
+        max-width: 100%;
+        width: 100%;
     }
 
     .page-header h1 {
@@ -21,6 +23,9 @@
         border: none;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100%;
     }
     
     .user-table-container {
@@ -30,27 +35,27 @@
     /* 버튼 스타일 */
     .btn-group-actions {
         display: flex;
-        flex-direction: column;  /* 세로 배치 */
-        gap: 8px;  /* 버튼 사이 간격 */
+        flex-direction: column;
+        gap: 4px;  /* 버튼 사이 간격 줄임 */
     }
 
     .btn-group-actions .btn {
-        width: 100%;  /* 버튼 너비 100% */
-        padding: 4px 12px;
-        font-size: 0.875rem;
-        white-space: nowrap;  /* 텍스트 한 줄로 유지 */
-        min-width: 60px;  /* 최소 너비 설정 */
+        width: 100%;
+        padding: 2px 8px;  /* 패딩 줄임 */
+        font-size: 0.8rem;  /* 폰트 크기 줄임 */
+        white-space: nowrap;
+        min-width: 50px;  /* 최소 너비 줄임 */
     }
     
     /* 모바일 최적화 스타일 */
     @media screen and (max-width: 768px) {
         .page-header {
-            margin: 0 -15px 20px -15px;
+            margin: 0 0 20px 0;
             border-radius: 0;
         }
 
         .card {
-            margin: 0 -15px;
+            margin: 0;
             border-radius: 0;
         }
 
@@ -88,12 +93,13 @@
 
         /* 모바일에서 버튼 너비 조정 */
         .btn-group-actions .btn {
-            min-width: 80px;  /* 모바일에서 버튼 최소 너비 */
+            min-width: 60px;  /* 모바일에서 버튼 최소 너비 줄임 */
+            font-size: 0.75rem;  /* 모바일에서 폰트 크기 더 줄임 */
         }
         
         .badge {
-            padding: 5px 10px;
-            font-size: 0.875rem;
+            padding: 4px 8px;  /* 배지 패딩 줄임 */
+            font-size: 0.8rem;
         }
         
         .user-email {
