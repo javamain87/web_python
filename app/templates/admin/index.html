@@ -16,6 +16,7 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow-x: hidden; /* 가로 스크롤 방지 */
     }
     
     /* DataTables 모바일 반응형 스타일 */
@@ -29,7 +30,7 @@
         }
         
         .dataTables_wrapper .dataTables_filter {
-            margin-left: 15px;
+            margin-left: 10px;
         }
         
         .dataTables_wrapper .dataTables_length select {
@@ -37,8 +38,9 @@
         }
         
         .dataTables_wrapper .dataTables_filter input {
-            width: 120px;
+            width: 100px; /* 검색창 너비 줄임 */
             margin-left: 5px;
+            max-width: calc(100% - 50px); /* 레이블 너비를 고려한 최대 너비 설정 */
         }
         
         .dataTables_info {
@@ -52,6 +54,27 @@
             justify-content: flex-start;
             margin-bottom: 10px;
             flex-wrap: nowrap;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* 테이블 반응형 스크롤 처리 */
+        .table-container {
+            margin: 0 -20px;  /* 네거티브 마진으로 패딩 상쇄 */
+            padding: 20px;
+            width: calc(100% + 40px);  /* 너비 조정 */
+            overflow-x: auto;
+        }
+
+        /* 검색 필터 컨테이너 */
+        .dataTables_filter {
+            flex: 1;
+            min-width: 0; /* flex-basis 오버플로우 방지 */
+        }
+
+        /* 페이지당 표시 개수 컨테이너 */
+        .dataTables_length {
+            flex-shrink: 0; /* 크기 고정 */
         }
     }
 </style>
