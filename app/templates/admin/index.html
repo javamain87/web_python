@@ -2,11 +2,55 @@
 
 {% block title %}대시보드{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chart-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .table-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">관리자 대시보드</h1>
-        <div class="card">
+        
+        <!-- 방문자 통계 차트 -->
+        <div class="chart-container">
+            <h2>일일 방문자 현황</h2>
+            <canvas id="visitorChart"></canvas>
+        </div>
+
+        <!-- 방문자 목록 테이블 -->
+        <div class="table-container">
+            <h2>오늘의 방문자 목록</h2>
+            <table id="visitorTable" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>NO.</th>
+                        <th>이름</th>
+                        <th>전화번호</th>
+                        <th>계좌번호</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 데이터는 JavaScript에서 동적으로 로드됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 기존 빠른 작업 카드 -->
+        <div class="card mt-4">
             <div class="card-body">
                 <h5 class="card-title">빠른 작업</h5>
                 <div class="list-group">
@@ -33,4 +77,90 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 방문자 통계 차트
+const ctx = document.getElementById('visitorChart').getContext('2d');
+let visitorChart;
+
+// 방문자 통계 데이터 가져오기
+async function fetchVisitorStats() {
+    try {
+        const response = await fetch('/admin/api/visitor_stats');
+        const data = await response.json();
+        
+        if (visitorChart) {
+            visitorChart.destroy();
+        }
+        
+        visitorChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: '방문자 수',
+                    data: data.data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('방문자 통계 데이터를 가져오는 중 오류 발생:', error);
+    }
+}
+
+// 방문자 목록 테이블
+let visitorTable;
+async function fetchTodayVisitors() {
+    try {
+        const response = await fetch('/admin/api/today_visitors');
+        const data = await response.json();
+        
+        if (visitorTable) {
+            visitorTable.destroy();
+        }
+        
+        visitorTable = $('#visitorTable').DataTable({
+            data: data,
+            columns: [
+                { data: 'id' },
+                { data: 'name' },
+                { data: 'phone' },
+                { data: 'account' }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json'
+            },
+            order: [[0, 'desc']],
+            pageLength: 10
+        });
+    } catch (error) {
+        console.error('오늘의 방문자 데이터를 가져오는 중 오류 발생:', error);
+    }
+}
+
+// 페이지 로드 시 데이터 가져오기
+document.addEventListener('DOMContentLoaded', function() {
+    fetchVisitorStats();
+    fetchTodayVisitors();
+    
+    // 5분마다 데이터 갱신
+    setInterval(() => {
+        fetchVisitorStats();
+        fetchTodayVisitors();
+    }, 5 * 60 * 1000);
+});
+</script>
 {% endblock %} 

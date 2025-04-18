@@ -4,11 +4,12 @@ from functools import wraps
 from app.models import User, Link, WorkLog
 from app import db
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 from twilio.rest import Client
 import os
 import socket
 from app.forms import LinkForm
+from sqlalchemy import func
 
 # Twilio 계정 정보
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -250,4 +251,75 @@ def public_view_link(link_code):
                          work_logs=work_logs,
                          applicant=applicant,
                          worker=worker,
-                         is_public=True) 
+                         is_public=True)
+
+@bp.route('/api/visitor_stats')
+@login_required
+@admin_required
+def visitor_stats():
+    # 최근 7일간의 방문자 통계
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=6)
+    
+    # 일별 방문자 수 조회
+    stats = db.session.query(
+        func.date(WorkLog.created_at).label('date'),
+        func.count(WorkLog.id).label('count')
+    ).filter(
+        WorkLog.created_at >= start_date,
+        WorkLog.created_at <= end_date
+    ).group_by(
+        func.date(WorkLog.created_at)
+    ).all()
+    
+    # 결과를 딕셔너리로 변환
+    result = {
+        'labels': [],
+        'data': []
+    }
+    
+    # 모든 날짜에 대해 데이터 생성
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.strftime('%Y-%m-%d')
+        result['labels'].append(date_str)
+        
+        # 해당 날짜의 방문자 수 찾기
+        count = next((stat.count for stat in stats if stat.date == current_date), 0)
+        result['data'].append(count)
+        
+        current_date += timedelta(days=1)
+    
+    return jsonify(result)
+
+@bp.route('/api/today_visitors')
+@login_required
+@admin_required
+def today_visitors():
+    # 오늘의 방문자 목록
+    today = datetime.now().date()
+    
+    visitors = db.session.query(
+        WorkLog.id,
+        User.username,
+        User.phone_number,
+        User.account_number
+    ).join(
+        User, WorkLog.worker_id == User.id
+    ).filter(
+        func.date(WorkLog.created_at) == today
+    ).order_by(
+        WorkLog.created_at.desc()
+    ).all()
+    
+    # 결과를 리스트로 변환
+    result = []
+    for i, visitor in enumerate(visitors, 1):
+        result.append({
+            'id': i,
+            'name': visitor.username,
+            'phone': visitor.phone_number,
+            'account': visitor.account_number
+        })
+    
+    return jsonify(result) 
