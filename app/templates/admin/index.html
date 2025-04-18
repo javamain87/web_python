@@ -23,24 +23,25 @@
     @media screen and (max-width: 768px) {
         .dataTables_wrapper .dataTables_length, 
         .dataTables_wrapper .dataTables_filter {
-            float: none;
             text-align: left;
             display: inline-block;
             margin-bottom: 0;
         }
         
-        .dataTables_wrapper .dataTables_filter {
-            margin-left: 10px;
+        .dataTables_wrapper .dataTables_length select {
+            width: 80px;
         }
         
-        .dataTables_wrapper .dataTables_length select {
-            width: 60px;
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            margin-left: 0;
+            text-align: right;
         }
         
         .dataTables_wrapper .dataTables_filter input {
-            width: 100px; /* 검색창 너비 줄임 */
+            width: 120px;
             margin-left: 5px;
-            max-width: calc(100% - 50px); /* 레이블 너비를 고려한 최대 너비 설정 */
+            max-width: calc(100% - 50px);
         }
         
         .dataTables_info {
@@ -51,30 +52,55 @@
         .dataTables_wrapper .dt-controls {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between; /* 양쪽 정렬로 변경 */
             margin-bottom: 10px;
             flex-wrap: nowrap;
             width: 100%;
             max-width: 100%;
+            padding-right: 0; /* 오른쪽 패딩 제거 */
         }
 
         /* 테이블 반응형 스크롤 처리 */
         .table-container {
-            margin: 0 -20px;  /* 네거티브 마진으로 패딩 상쇄 */
+            margin: 0 -20px;
             padding: 20px;
-            width: calc(100% + 40px);  /* 너비 조정 */
+            width: calc(100% + 40px);
             overflow-x: auto;
         }
 
         /* 검색 필터 컨테이너 */
         .dataTables_filter {
-            flex: 1;
-            min-width: 0; /* flex-basis 오버플로우 방지 */
+            flex: 0 0 auto; /* 크기 고정 */
+            min-width: 0;
         }
 
         /* 페이지당 표시 개수 컨테이너 */
         .dataTables_length {
-            flex-shrink: 0; /* 크기 고정 */
+            flex: 0 0 auto;
+        }
+    }
+
+    /* 데스크톱 스타일 */
+    @media screen and (min-width: 769px) {
+        .dataTables_wrapper .dt-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dataTables_wrapper .dataTables_filter {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 5px;
+            width: 200px;
+        }
+
+        .dataTables_wrapper .dataTables_length {
+            margin-right: auto;
         }
     }
 </style>
