@@ -209,11 +209,23 @@ async function fetchTodayVisitors() {
                 { data: 'account' }
             ],
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json'
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json',
+                lengthMenu: "_MENU_",
+                info: "총 _TOTAL_개 중 _START_~_END_",
+                infoEmpty: "데이터가 없습니다",
+                emptyTable: "데이터가 없습니다",
+                search: "검색:",
+                paginate: {
+                    first: "처음",
+                    last: "마지막",
+                    next: "다음",
+                    previous: "이전"
+                }
             },
             order: [[0, 'desc']],
             pageLength: 10,
-            dom: "<'dt-controls'<'dataTables_length'l><'dataTables_filter'f>>rtip"
+            dom: "<'dt-controls'<'dataTables_length'l><'dataTables_filter'f>>rtip",
+            lengthMenu: [[10, 25, 50, -1], ['10개', '25개', '50개', '전체']]  // select 박스 옵션 커스터마이징
         });
     } catch (error) {
         console.error('오늘의 방문자 데이터를 가져오는 중 오류 발생:', error);
