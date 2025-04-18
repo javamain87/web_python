@@ -17,6 +17,43 @@
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
+    /* DataTables 모바일 반응형 스타일 */
+    @media screen and (max-width: 768px) {
+        .dataTables_wrapper .dataTables_length, 
+        .dataTables_wrapper .dataTables_filter {
+            float: none;
+            text-align: left;
+            display: inline-block;
+            margin-bottom: 0;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            margin-left: 15px;
+        }
+        
+        .dataTables_wrapper .dataTables_length select {
+            width: 60px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            width: 120px;
+            margin-left: 5px;
+        }
+        
+        .dataTables_info {
+            padding-top: 0.5em !important;
+        }
+        
+        /* 상단 컨트롤 영역을 flex container로 만듦 */
+        .dataTables_wrapper .dt-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: nowrap;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -132,6 +169,14 @@ async function fetchTodayVisitors() {
             visitorTable.destroy();
         }
         
+        // DataTables 초기화 전에 컨트롤 래퍼 추가
+        const tableContainer = document.querySelector('#visitorTable').closest('.table-container');
+        if (!tableContainer.querySelector('.dt-controls')) {
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'dt-controls';
+            tableContainer.insertBefore(controlsDiv, tableContainer.firstChild);
+        }
+        
         visitorTable = $('#visitorTable').DataTable({
             data: data,
             columns: [
@@ -144,7 +189,8 @@ async function fetchTodayVisitors() {
                 url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json'
             },
             order: [[0, 'desc']],
-            pageLength: 10
+            pageLength: 10,
+            dom: "<'dt-controls'<'dataTables_length'l><'dataTables_filter'f>>rtip"
         });
     } catch (error) {
         console.error('오늘의 방문자 데이터를 가져오는 중 오류 발생:', error);
