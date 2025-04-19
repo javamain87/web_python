@@ -345,37 +345,21 @@ def today_visitors():
         # 한국 시간으로 오늘 날짜 계산
         today = (datetime.utcnow() + timedelta(hours=9)).date()
         
-        # Get WorkLog visitors
-        work_visitors = WorkLog.query.filter(
-            func.date(WorkLog.created_at + timedelta(hours=9)) == today
-        ).distinct(WorkLog.worker_id).all()
-        
-        # Get AccessLog visitors with link_login action
-        access_visitors = AccessLog.query.filter(
-            func.date(AccessLog.created_at + timedelta(hours=9)) == today,
-            AccessLog.action == 'link_login'
-        ).order_by(AccessLog.created_at.desc()).all()
+        # Get AccessLog visitors with link_login action (excluding admin)
+        access_visitors = AccessLog.query.join(User, AccessLog.user_id == User.id)\
+            .filter(
+                func.date(AccessLog.created_at + timedelta(hours=9)) == today,
+                AccessLog.action == 'link_login',
+                User.user_type != 'admin'  # admin 계정 제외
+            ).order_by(AccessLog.created_at.desc()).all()
         
         # 중복 제거를 위한 딕셔너리
         visitor_dict = {}
         
-        # Add WorkLog visitors
-        for visitor in work_visitors:
-            user = User.query.get(visitor.worker_id)
-            if user:
-                key = f"{user.username}_{user.phone_number}"
-                if key not in visitor_dict:
-                    visitor_dict[key] = {
-                        'name': user.username,
-                        'phone': user.phone_number,
-                        'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
-                        'type': '작업자'
-                    }
-        
         # Add AccessLog visitors
         for visitor in access_visitors:
             user = User.query.get(visitor.user_id)
-            if user:
+            if user and user.user_type != 'admin':  # 한번 더 admin 체크
                 key = f"{user.username}_{user.phone_number}"
                 if key not in visitor_dict:
                     visitor_dict[key] = {
