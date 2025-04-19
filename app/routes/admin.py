@@ -79,20 +79,19 @@ def links():
 @login_required
 @admin_required
 def create_link():
-    form = LinkForm()
-    
-    # 신청자와 작업자 목록 채우기
-    applicants = User.query.filter_by(user_type='applicant').all()
-    workers = User.query.filter_by(user_type='worker').all()
-    
-    form.applicant_id.choices = [(a.id, a.username) for a in applicants]
-    form.worker_id.choices = [(w.id, w.username) for w in workers]
-    
-    if form.validate_on_submit():
-        # 신청자와 작업자 선택 확인
-        if not form.applicant_id.data or not form.worker_id.data:
-            flash('신청자와 작업자를 모두 선택해주세요.', 'error')
-            return render_template('admin/create_link.html', form=form)
+    if request.method == 'POST':
+        # 폼 데이터 가져오기
+        applicant_name = request.form.get('applicant_name')
+        applicant_phone = request.form.get('applicant_phone')
+        worker_name = request.form.get('worker_name')
+        worker_phone = request.form.get('worker_phone')
+        password = request.form.get('password')
+        is_active = request.form.get('is_active') == 'on'
+        
+        # 필수 필드 확인
+        if not all([applicant_name, applicant_phone, worker_name, worker_phone, password]):
+            flash('모든 필드를 입력해주세요.', 'error')
+            return render_template('admin/create_link.html')
         
         # 링크 코드 생성
         link_code = secrets.token_urlsafe(16)
@@ -100,28 +99,31 @@ def create_link():
         # 링크 생성
         link = Link(
             link_code=link_code,
-            applicant_id=form.applicant_id.data,
-            worker_id=form.worker_id.data,
-            applicant_name=form.applicant_name.data,
-            applicant_phone=form.applicant_phone.data,
-            worker_name=form.worker_name.data,
-            worker_phone=form.worker_phone.data,
-            password=form.password.data,
-            is_active=form.is_active.data,
+            applicant_name=applicant_name,
+            applicant_phone=applicant_phone,
+            worker_name=worker_name,
+            worker_phone=worker_phone,
+            password=password,
+            is_active=is_active,
             link_type='work',
             admin_id=current_user.id
         )
         
-        db.session.add(link)
-        db.session.commit()
-        
-        # 링크 URL 생성
-        link_url = url_for('main.view_link', link_code=link_code, _external=True)
-        
-        flash(f'링크가 생성되었습니다. 링크: {link_url}\n비밀번호: {form.password.data}', 'success')
-        return redirect(url_for('admin.links'))
+        try:
+            db.session.add(link)
+            db.session.commit()
+            
+            # 링크 URL 생성
+            link_url = url_for('main.view_link', link_code=link_code, _external=True)
+            
+            flash(f'링크가 생성되었습니다.\n링크: {link_url}\n비밀번호: {password}', 'success')
+            return redirect(url_for('admin.links'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'링크 생성 중 오류가 발생했습니다: {str(e)}', 'error')
+            return render_template('admin/create_link.html')
     
-    return render_template('admin/create_link.html', form=form)
+    return render_template('admin/create_link.html')
 
 @bp.route('/links/<int:link_id>/edit', methods=['GET', 'POST'])
 @login_required
