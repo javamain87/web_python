@@ -343,12 +343,12 @@ def visitor_stats():
 def today_visitors():
     try:
         # 한국 시간으로 오늘 날짜 계산
-        today = (datetime.utcnow() + timedelta(hours=9)).date()
+        today = datetime.utcnow().date()  # UTC 기준으로 변경
         
         # Get AccessLog visitors with link_login action (excluding admin)
         access_visitors = AccessLog.query.join(User, AccessLog.user_id == User.id)\
             .filter(
-                func.date(AccessLog.created_at + timedelta(hours=9)) == today,
+                func.date(AccessLog.created_at) == today,  # UTC 기준으로 비교
                 AccessLog.action == 'link_login',
                 User.user_type != 'admin'  # admin 계정 제외
             ).order_by(AccessLog.created_at.desc()).all()
@@ -362,10 +362,12 @@ def today_visitors():
             if user and user.user_type != 'admin':  # 한번 더 admin 체크
                 key = f"{user.username}_{user.phone_number}"
                 if key not in visitor_dict:
+                    # KST로 변환하여 표시
+                    visit_time = (visitor.created_at + timedelta(hours=9)).strftime('%H:%M')
                     visitor_dict[key] = {
                         'name': user.username,
                         'phone': user.phone_number,
-                        'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
+                        'time': visit_time,
                         'type': '신청자' if user.user_type == 'applicant' else '작업자'
                     }
         
