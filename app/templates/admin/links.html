@@ -29,8 +29,24 @@
                             {% for link in links %}
                             <tr>
                                 <td>{{ link.id }}</td>
-                                <td>{{ link.applicant.username }}</td>
-                                <td>{{ link.worker.username }}</td>
+                                <td>
+                                    {{ link.applicant_name }}
+                                    {% if link.applicant %}
+                                    <br><small class="text-muted">{{ link.applicant.phone_number }}</small>
+                                    {% if link.applicant.account_number %}
+                                    <br><small class="text-muted">계좌: {{ link.applicant.account_number }}</small>
+                                    {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ link.worker_name }}
+                                    {% if link.worker %}
+                                    <br><small class="text-muted">{{ link.worker.phone_number }}</small>
+                                    {% if link.worker.account_number %}
+                                    <br><small class="text-muted">계좌: {{ link.worker.account_number }}</small>
+                                    {% endif %}
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <div class="mb-1">
                                         <strong>URL:</strong> 

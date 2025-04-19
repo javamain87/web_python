@@ -83,33 +83,61 @@ def create_link():
         # 폼 데이터 가져오기
         applicant_name = request.form.get('applicant_name')
         applicant_phone = request.form.get('applicant_phone')
+        applicant_account = request.form.get('applicant_account')  # 계좌번호 추가
         worker_name = request.form.get('worker_name')
         worker_phone = request.form.get('worker_phone')
+        worker_account = request.form.get('worker_account')  # 계좌번호 추가
         password = request.form.get('password')
         is_active = request.form.get('is_active') == 'on'
         
         # 필수 필드 확인
         if not all([applicant_name, applicant_phone, worker_name, worker_phone, password]):
-            flash('모든 필드를 입력해주세요.', 'error')
+            flash('필수 필드를 모두 입력해주세요.', 'error')
             return render_template('admin/create_link.html')
         
-        # 링크 코드 생성
-        link_code = secrets.token_urlsafe(16)
-        
-        # 링크 생성
-        link = Link(
-            link_code=link_code,
-            applicant_name=applicant_name,
-            applicant_phone=applicant_phone,
-            worker_name=worker_name,
-            worker_phone=worker_phone,
-            password=password,
-            is_active=is_active,
-            link_type='work',
-            admin_id=current_user.id
-        )
-        
         try:
+            # 신청자 생성 또는 조회
+            applicant = User.query.filter_by(phone_number=applicant_phone).first()
+            if not applicant:
+                applicant = User(
+                    username=applicant_name,
+                    phone_number=applicant_phone,
+                    account_number=applicant_account,
+                    user_type='applicant'
+                )
+                db.session.add(applicant)
+                db.session.flush()  # ID 생성을 위해 flush
+            
+            # 작업자 생성 또는 조회
+            worker = User.query.filter_by(phone_number=worker_phone).first()
+            if not worker:
+                worker = User(
+                    username=worker_name,
+                    phone_number=worker_phone,
+                    account_number=worker_account,
+                    user_type='worker'
+                )
+                db.session.add(worker)
+                db.session.flush()  # ID 생성을 위해 flush
+            
+            # 링크 코드 생성
+            link_code = secrets.token_urlsafe(16)
+            
+            # 링크 생성
+            link = Link(
+                link_code=link_code,
+                applicant_id=applicant.id,
+                worker_id=worker.id,
+                applicant_name=applicant_name,
+                applicant_phone=applicant_phone,
+                worker_name=worker_name,
+                worker_phone=worker_phone,
+                password=password,
+                is_active=is_active,
+                link_type='work',
+                admin_id=current_user.id
+            )
+            
             db.session.add(link)
             db.session.commit()
             
@@ -118,6 +146,7 @@ def create_link():
             
             flash(f'링크가 생성되었습니다.\n링크: {link_url}\n비밀번호: {password}', 'success')
             return redirect(url_for('admin.links'))
+            
         except Exception as e:
             db.session.rollback()
             flash(f'링크 생성 중 오류가 발생했습니다: {str(e)}', 'error')
