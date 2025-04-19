@@ -67,7 +67,7 @@ def index():
         today = datetime.utcnow().date()
         visitors = WorkLog.query.filter(
             func.date(WorkLog.created_at) == today
-        ).distinct(WorkLog.user_id).count()
+        ).distinct(WorkLog.worker_id).count()
         
         # Get total work logs
         total_work_logs = WorkLog.query.count()
@@ -270,7 +270,7 @@ def visitor_stats():
             date = datetime.utcnow().date() - timedelta(days=i)
             count = WorkLog.query.filter(
                 func.date(WorkLog.created_at) == date
-            ).distinct(WorkLog.user_id).count()
+            ).distinct(WorkLog.worker_id).count()
             stats.append({
                 'date': date.strftime('%Y-%m-%d'),
                 'count': count
@@ -288,11 +288,11 @@ def today_visitors():
         today = datetime.utcnow().date()
         visitors = WorkLog.query.filter(
             func.date(WorkLog.created_at) == today
-        ).distinct(WorkLog.user_id).all()
+        ).distinct(WorkLog.worker_id).all()
         
         visitor_list = []
         for visitor in visitors:
-            user = User.query.get(visitor.user_id)
+            user = User.query.get(visitor.worker_id)
             if user:
                 visitor_list.append({
                     'name': user.username,
