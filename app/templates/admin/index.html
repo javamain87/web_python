@@ -317,16 +317,9 @@ function updateVisitorsList() {
         });
 }
 
-// 페이지 로드 시 데이터 가져오기
-document.addEventListener('DOMContentLoaded', function() {
+// 페이지 로드 시 차트 초기화
+document.addEventListener('DOMContentLoaded', () => {
     fetchVisitorStats();
-    updateVisitorsList();
-    
-    // 5분마다 데이터 갱신
-    setInterval(() => {
-        fetchVisitorStats();
-        updateVisitorsList();
-    }, 5 * 60 * 1000);
 });
 </script>
 {% endblock %} 

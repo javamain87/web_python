@@ -315,39 +315,27 @@ def public_view_link(link_code):
 @admin_required
 def visitor_stats():
     try:
-        # 오늘 날짜 기준으로 일주일치 데이터 가져오기
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=6)
-        
-        # 날짜별 방문자 수 계산 (admin 계정 제외)
-        stats = db.session.query(
-            func.date(AccessLog.created_at).label('date'),
-            func.count(distinct(AccessLog.user_id)).label('count')
-        ).join(User, AccessLog.user_id == User.id)\
-        .filter(
-            AccessLog.created_at.between(start_date, end_date),
-            User.user_type != 'admin'  # admin 계정 제외
-        ).group_by(func.date(AccessLog.created_at))\
-        .order_by(func.date(AccessLog.created_at)).all()
-        
-        # 결과를 날짜:방문자수 형태의 딕셔너리로 변환
-        stats_dict = {str(row.date): row.count for row in stats}
-        
-        # 일주일치 날짜 생성
-        date_range = [(start_date + timedelta(days=x)).date() for x in range(7)]
-        
-        # 최종 통계 데이터 생성
-        final_stats = []
-        for date in date_range:
-            final_stats.append({
+        # Get visitor stats for the last 7 days
+        stats = []
+        for i in range(6, -1, -1):
+            date = (datetime.utcnow() + timedelta(hours=9)).date() - timedelta(days=i)
+            
+            # Get AccessLog count for link_login (excluding admin)
+            access_count = AccessLog.query.join(User, AccessLog.user_id == User.id)\
+                .filter(
+                    func.date(AccessLog.created_at + timedelta(hours=9)) == date,
+                    AccessLog.action == 'link_login',
+                    User.user_type != 'admin'  # admin 계정 제외
+                ).distinct(AccessLog.user_id).count()
+            
+            stats.append({
                 'date': date.strftime('%Y-%m-%d'),
-                'count': stats_dict.get(str(date), 0)
+                'count': access_count
             })
-        
-        return jsonify({'stats': final_stats})
+        return {'stats': stats}
     except Exception as e:
-        current_app.logger.error(f"Error in visitor_stats: {str(e)}")
-        return jsonify({'error': 'Failed to fetch visitor statistics'}), 500
+        current_app.logger.error(f'Error getting visitor stats: {str(e)}')
+        return {'error': str(e)}, 500
 
 @bp.route('/api/today_visitors')
 @login_required
