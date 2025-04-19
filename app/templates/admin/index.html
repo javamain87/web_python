@@ -188,13 +188,13 @@
         </div>
 
         <!-- 오늘 방문자 목록 -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">오늘 방문자 목록</h5>
+                <h5 class="card-title mb-0">오늘 방문자 목록</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table" id="visitors-table">
+                    <table id="visitorTable" class="table table-striped">
                         <thead>
                             <tr>
                                 <th>No.</th>
@@ -204,16 +204,8 @@
                                 <th>유형</th>
                             </tr>
                         </thead>
-                        <tbody id="today-visitors">
-                            <template id="visitor-row-template">
-                                <tr>
-                                    <td>${visitor.no}</td>
-                                    <td>${visitor.name}</td>
-                                    <td>${visitor.phone}</td>
-                                    <td>${visitor.time}</td>
-                                    <td>${visitor.type}</td>
-                                </tr>
-                            </template>
+                        <tbody>
+                            <!-- 방문자 데이터가 여기에 동적으로 추가됩니다 -->
                         </tbody>
                     </table>
                 </div>
@@ -284,42 +276,43 @@ async function fetchVisitorStats() {
     }
 }
 
-// 방문자 목록 업데이트
-function updateVisitorsList() {
-    fetch('/admin/api/today_visitors')
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.querySelector('#today-visitors');
-            tbody.innerHTML = '';
-            
-            if (data.visitors && data.visitors.length > 0) {
-                data.visitors.forEach(visitor => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${visitor.no}</td>
-                        <td>${visitor.name}</td>
-                        <td>${visitor.phone}</td>
-                        <td>${visitor.time}</td>
-                        <td>${visitor.type}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td colspan="4" class="text-center">방문자가 없습니다.</td>';
-                tbody.appendChild(tr);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const tbody = document.querySelector('#today-visitors');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center">데이터를 불러오는데 실패했습니다.</td></tr>';
-        });
+// 오늘 방문자 목록 가져오기
+async function updateVisitorsList() {
+    try {
+        const response = await fetch('/admin/api/today_visitors');
+        const data = await response.json();
+        
+        const visitorTableBody = document.querySelector('#visitorTable tbody');
+        visitorTableBody.innerHTML = ''; // 기존 데이터 삭제
+        
+        if (data.visitors && data.visitors.length > 0) {
+            data.visitors.forEach(visitor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${visitor.no}</td>
+                    <td>${visitor.name}</td>
+                    <td>${visitor.phone}</td>
+                    <td>${visitor.time}</td>
+                    <td>${visitor.type}</td>
+                `;
+                visitorTableBody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('오늘 방문자 목록을 가져오는 중 오류 발생:', error);
+    }
 }
 
-// 페이지 로드 시 차트 초기화
-document.addEventListener('DOMContentLoaded', () => {
+// 페이지 로드 시 데이터 가져오기
+document.addEventListener('DOMContentLoaded', function() {
     fetchVisitorStats();
+    updateVisitorsList();
+    
+    // 5분마다 데이터 갱신
+    setInterval(() => {
+        fetchVisitorStats();
+        updateVisitorsList();
+    }, 5 * 60 * 1000);
 });
 </script>
 {% endblock %} 
