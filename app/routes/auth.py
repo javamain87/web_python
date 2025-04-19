@@ -80,11 +80,14 @@ def register_link(link_code):
     if link_code is None:
         return render_template('auth/register_link.html', link=None)
         
-    link = Link.query.filter_by(link_code=link_code).first_or_404()
+    link = Link.query.filter_by(link_code=link_code).first()
+    if not link:
+        flash('Invalid link code.', 'error')
+        return render_template('auth/register_link.html', link=None)
     
     if not link.is_active:
-        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
-        return redirect(url_for('auth.register_link'))
+        flash('This link is no longer available.', 'error')
+        return render_template('auth/register_link.html', link=None)
     
     if request.method == 'POST':
         name = request.form.get('name')
@@ -92,7 +95,7 @@ def register_link(link_code):
         password = request.form.get('password')
         
         if not name or not password or not phone:
-            flash('이름, 전화번호, 비밀번호를 모두 입력해주세요.', 'error')
+            flash('Please enter your name, phone number, and password.', 'error')
             return render_template('auth/register_link.html', link=link)
         
         # 이름과 전화번호, 비밀번호 검증
@@ -122,9 +125,9 @@ def register_link(link_code):
                 else:
                     return redirect(url_for('worker.view_link', link_code=link_code))
             else:
-                flash('사용자 정보를 찾을 수 없습니다.', 'error')
+                flash('User information not found.', 'error')
         else:
-            flash('이름, 전화번호 또는 비밀번호가 일치하지 않습니다.', 'error')
+            flash('Name, phone number, or password does not match.', 'error')
             return render_template('auth/register_link.html', link=link)
     
     return render_template('auth/register_link.html', link=link)
