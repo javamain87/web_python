@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
 from app.models import User, Link, WorkLog, AccessLog
@@ -10,6 +10,7 @@ import os
 import socket
 from app.forms import LinkForm
 from sqlalchemy import func
+import string
 
 # Twilio 계정 정보
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -58,8 +59,35 @@ def send_sms(to_number, message):
 @login_required
 @admin_required
 def index():
-    links = Link.query.all()
-    return render_template('admin/index.html', links=links)
+    try:
+        # Get all links
+        links = Link.query.order_by(Link.created_at.desc()).all()
+        
+        # Get today's visitors
+        today = datetime.utcnow().date()
+        visitors = WorkLog.query.filter(
+            func.date(WorkLog.created_at) == today
+        ).distinct(WorkLog.user_id).count()
+        
+        # Get total work logs
+        total_work_logs = WorkLog.query.count()
+        
+        # Get recent access logs
+        recent_logs = AccessLog.query.order_by(AccessLog.created_at.desc()).limit(10).all()
+        
+        return render_template('admin/index.html',
+                             links=links,
+                             visitors=visitors,
+                             total_work_logs=total_work_logs,
+                             recent_logs=recent_logs)
+    except Exception as e:
+        flash(f'Error loading dashboard: {str(e)}', 'danger')
+        current_app.logger.error(f'Error loading admin dashboard: {str(e)}')
+        return render_template('admin/index.html',
+                             links=[],
+                             visitors=0,
+                             total_work_logs=0,
+                             recent_logs=[])
 
 @bp.route('/users')
 @login_required
@@ -79,86 +107,42 @@ def links():
 @login_required
 @admin_required
 def create_link():
-    if request.method == 'POST':
-        # 폼 데이터 가져오기
-        applicant_name = request.form.get('applicant_name')
-        applicant_phone = request.form.get('applicant_phone')
-        applicant_account = request.form.get('applicant_account')  # 계좌번호 추가
-        worker_name = request.form.get('worker_name')
-        worker_phone = request.form.get('worker_phone')
-        worker_account = request.form.get('worker_account')  # 계좌번호 추가
-        password = request.form.get('password')
-        is_active = request.form.get('is_active') == 'on'
-        
-        # 필수 필드 확인
-        if not all([applicant_name, applicant_phone, worker_name, worker_phone, password]):
-            flash('필수 필드를 모두 입력해주세요.', 'error')
-            return render_template('admin/create_link.html')
-        
+    form = LinkForm()
+    if form.validate_on_submit():
         try:
-            # 신청자 생성 또는 조회
-            applicant = User.query.filter_by(phone_number=applicant_phone).first()
-            if not applicant:
-                applicant = User(
-                    username=applicant_name,
-                    phone_number=applicant_phone,
-                    account_number=applicant_account,
-                    user_type='applicant'
-                )
-                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
-                default_password = applicant_phone[-4:]
-                applicant.set_password(default_password)
-                db.session.add(applicant)
-                db.session.flush()  # ID 생성을 위해 flush
-            
-            # 작업자 생성 또는 조회
-            worker = User.query.filter_by(phone_number=worker_phone).first()
-            if not worker:
-                worker = User(
-                    username=worker_name,
-                    phone_number=worker_phone,
-                    account_number=worker_account,
-                    user_type='worker'
-                )
-                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
-                default_password = worker_phone[-4:]
-                worker.set_password(default_password)
-                db.session.add(worker)
-                db.session.flush()  # ID 생성을 위해 flush
-            
-            # 링크 코드 생성
-            link_code = secrets.token_urlsafe(16)
-            
-            # 링크 생성
+            # Generate a unique link code
+            while True:
+                link_code = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))
+                if not Link.query.filter_by(code=link_code).first():
+                    break
+
+            # Create new link
             link = Link(
-                link_code=link_code,
-                applicant_id=applicant.id,
-                worker_id=worker.id,
-                applicant_name=applicant_name,
-                applicant_phone=applicant_phone,
-                worker_name=worker_name,
-                worker_phone=worker_phone,
-                password=password,
-                is_active=is_active,
-                link_type='work',
-                admin_id=current_user.id
+                code=link_code,
+                name=form.name.data,
+                phone_number=form.phone_number.data,
+                created_by=current_user.id,
+                expires_at=datetime.utcnow() + timedelta(days=1)
             )
-            
             db.session.add(link)
             db.session.commit()
-            
-            # 링크 URL 생성
-            link_url = url_for('main.view_link', link_code=link_code, _external=True)
-            
-            flash(f'링크가 생성되었습니다.\n링크: {link_url}\n비밀번호: {password}', 'success')
-            return redirect(url_for('admin.links'))
-            
+
+            # Log the link creation
+            access_log = AccessLog(
+                user_id=current_user.id,
+                action='create_link',
+                details=f'Created link: {link_code}'
+            )
+            db.session.add(access_log)
+            db.session.commit()
+
+            flash('Link created successfully!', 'success')
+            return redirect(url_for('admin.index'))
         except Exception as e:
             db.session.rollback()
-            flash(f'링크 생성 중 오류가 발생했습니다: {str(e)}', 'error')
-            return render_template('admin/create_link.html')
-    
-    return render_template('admin/create_link.html')
+            flash(f'Error creating link: {str(e)}', 'danger')
+            current_app.logger.error(f'Error creating link: {str(e)}')
+    return render_template('admin/create_link.html', form=form)
 
 @bp.route('/links/<int:link_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -198,34 +182,28 @@ def edit_link(link_id):
     
     return render_template('admin/edit_link.html', link=link)
 
-@bp.route('/links/<int:link_id>/delete', methods=['POST'])
+@bp.route('/delete_link/<int:link_id>', methods=['POST'])
 @login_required
 @admin_required
 def delete_link(link_id):
     link = Link.query.get_or_404(link_id)
-    
     try:
-        # Create work log
-        log = WorkLog(
-            link=link,
-            work_date=datetime.now().date(),
-            content='Link deleted',
-            action='delete',
-            details=f'Deleted by {current_user.username}',
-            worker_id=link.worker_id
+        # Log the link deletion
+        access_log = AccessLog(
+            user_id=current_user.id,
+            action='delete_link',
+            details=f'Deleted link: {link.code}'
         )
-        db.session.add(log)
+        db.session.add(access_log)
         
-        # Delete link
         db.session.delete(link)
         db.session.commit()
-        
-        flash('링크가 성공적으로 삭제되었습니다.', 'success')
+        flash('Link deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'에러가 발생했습니다: {str(e)}', 'danger')
-    
-    return redirect(url_for('admin.links'))
+        flash(f'Error deleting link: {str(e)}', 'danger')
+        current_app.logger.error(f'Error deleting link: {str(e)}')
+    return redirect(url_for('admin.index'))
 
 @bp.route('/links/<int:link_id>/send', methods=['GET'])
 @login_required
@@ -256,20 +234,8 @@ def send_link(link_id):
 @login_required
 @admin_required
 def view_link(link_code):
-    link = Link.query.filter_by(link_code=link_code).first_or_404()
-    
-    # 작업 로그 가져오기 (최신순으로 정렬)
-    work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()
-    
-    # 신청자와 작업자 정보 가져오기
-    applicant = User.query.get(link.applicant_id)
-    worker = User.query.get(link.worker_id)
-    
-    return render_template('admin/view_link.html', 
-                         link=link,
-                         work_logs=work_logs,
-                         applicant=applicant,
-                         worker=worker)
+    link = Link.query.filter_by(code=link_code).first_or_404()
+    return render_template('admin/view_link.html', link=link)
 
 @bp.route('/public/link/<link_code>')
 def public_view_link(link_code):
@@ -297,87 +263,43 @@ def public_view_link(link_code):
 @login_required
 @admin_required
 def visitor_stats():
-    # 최근 7일간의 방문자 통계
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=6)
-    
-    # 일별 로그인한 사용자 수 조회 (중복 제거)
-    stats = db.session.query(
-        func.date(AccessLog.created_at).label('date'),
-        func.count(func.distinct(AccessLog.user_id)).label('count')
-    ).filter(
-        AccessLog.created_at >= start_date,
-        AccessLog.created_at <= end_date + timedelta(days=1),
-        AccessLog.action == 'login'
-    ).group_by(
-        func.date(AccessLog.created_at)
-    ).all()
-    
-    # 결과를 딕셔너리로 변환
-    result = {
-        'labels': [],
-        'data': []
-    }
-    
-    # 모든 날짜에 대해 데이터 생성
-    current_date = start_date
-    while current_date <= end_date:
-        date_str = current_date.strftime('%Y-%m-%d')
-        result['labels'].append(date_str)
-        
-        # 해당 날짜의 방문자 수 찾기
-        count = next((stat.count for stat in stats if stat.date == current_date), 0)
-        result['data'].append(count)
-        
-        current_date += timedelta(days=1)
-    
-    return jsonify(result)
+    try:
+        # Get visitor stats for the last 7 days
+        stats = []
+        for i in range(6, -1, -1):
+            date = datetime.utcnow().date() - timedelta(days=i)
+            count = WorkLog.query.filter(
+                func.date(WorkLog.created_at) == date
+            ).distinct(WorkLog.user_id).count()
+            stats.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': count
+            })
+        return {'stats': stats}
+    except Exception as e:
+        current_app.logger.error(f'Error getting visitor stats: {str(e)}')
+        return {'error': str(e)}, 500
 
 @bp.route('/api/today_visitors')
 @login_required
 @admin_required
 def today_visitors():
-    # 오늘의 방문자 목록 (가장 최근 활동 기준)
-    today = datetime.now().date()
-    
-    # 서브쿼리로 각 사용자의 가장 최근 활동 시간 조회
-    latest_activities = db.session.query(
-        AccessLog.user_id,
-        func.max(AccessLog.created_at).label('latest_activity'),
-        AccessLog.action,
-        AccessLog.details
-    ).filter(
-        func.date(AccessLog.created_at) == today
-    ).group_by(
-        AccessLog.user_id
-    ).subquery()
-    
-    # 사용자 정보와 최근 활동 조회
-    visitors = db.session.query(
-        User.username,
-        User.phone_number,
-        User.account_number,
-        latest_activities.c.action,
-        latest_activities.c.details,
-        latest_activities.c.latest_activity
-    ).join(
-        latest_activities,
-        User.id == latest_activities.c.user_id
-    ).order_by(
-        latest_activities.c.latest_activity.desc()
-    ).all()
-    
-    # 결과를 리스트로 변환
-    result = []
-    for i, visitor in enumerate(visitors, 1):
-        result.append({
-            'id': i,
-            'name': visitor.username,
-            'phone': visitor.phone_number,
-            'account': visitor.account_number,
-            'last_action': visitor.action,
-            'last_action_details': visitor.details,
-            'last_activity_time': visitor.latest_activity.strftime('%Y-%m-%d %H:%M:%S')
-        })
-    
-    return jsonify(result) 
+    try:
+        today = datetime.utcnow().date()
+        visitors = WorkLog.query.filter(
+            func.date(WorkLog.created_at) == today
+        ).distinct(WorkLog.user_id).all()
+        
+        visitor_list = []
+        for visitor in visitors:
+            user = User.query.get(visitor.user_id)
+            if user:
+                visitor_list.append({
+                    'name': user.username,
+                    'phone': user.phone_number,
+                    'time': visitor.created_at.strftime('%H:%M')
+                })
+        return {'visitors': visitor_list}
+    except Exception as e:
+        current_app.logger.error(f'Error getting today\'s visitors: {str(e)}')
+        return {'error': str(e)}, 500 
