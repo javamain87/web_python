@@ -318,16 +318,16 @@ def visitor_stats():
         # Get visitor stats for the last 7 days
         stats = []
         for i in range(6, -1, -1):
-            date = datetime.utcnow().date() - timedelta(days=i)
+            date = (datetime.utcnow() + timedelta(hours=9)).date() - timedelta(days=i)
             
             # Get WorkLog count
             work_count = WorkLog.query.filter(
-                func.date(WorkLog.created_at) == date
+                func.date(WorkLog.created_at + timedelta(hours=9)) == date
             ).distinct(WorkLog.worker_id).count()
             
             # Get AccessLog count for link_login
             access_count = AccessLog.query.filter(
-                func.date(AccessLog.created_at) == date,
+                func.date(AccessLog.created_at + timedelta(hours=9)) == date,
                 AccessLog.action == 'link_login'
             ).distinct(AccessLog.user_id).count()
             
@@ -348,16 +348,17 @@ def visitor_stats():
 @admin_required
 def today_visitors():
     try:
-        today = datetime.utcnow().date()
+        # 한국 시간으로 오늘 날짜 계산
+        today = (datetime.utcnow() + timedelta(hours=9)).date()
         
         # Get WorkLog visitors
         work_visitors = WorkLog.query.filter(
-            func.date(WorkLog.created_at) == today
+            func.date(WorkLog.created_at + timedelta(hours=9)) == today
         ).distinct(WorkLog.worker_id).all()
         
         # Get AccessLog visitors with link_login action
         access_visitors = AccessLog.query.filter(
-            func.date(AccessLog.created_at) == today,
+            func.date(AccessLog.created_at + timedelta(hours=9)) == today,
             AccessLog.action == 'link_login'
         ).order_by(AccessLog.created_at.desc()).all()
         
@@ -370,7 +371,7 @@ def today_visitors():
                 visitor_list.append({
                     'name': user.username,
                     'phone': user.phone_number,
-                    'time': visitor.created_at.strftime('%H:%M'),
+                    'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
                     'type': '작업자'
                 })
         
@@ -381,7 +382,7 @@ def today_visitors():
                 visitor_list.append({
                     'name': user.username,
                     'phone': user.phone_number,
-                    'time': visitor.created_at.strftime('%H:%M'),
+                    'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
                     'type': '신청자' if user.user_type == 'applicant' else '작업자'
                 })
         

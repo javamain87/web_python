@@ -284,17 +284,28 @@ function updateVisitorsList() {
         .then(data => {
             const tbody = document.querySelector('#today-visitors');
             tbody.innerHTML = '';
-            data.forEach(visitor => {
+            
+            if (data.visitors && data.visitors.length > 0) {
+                data.visitors.forEach(visitor => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${visitor.name}</td>
+                        <td>${visitor.phone}</td>
+                        <td>${visitor.time}</td>
+                        <td>${visitor.type}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${visitor.id}</td>
-                    <td>${visitor.name}</td>
-                    <td>${visitor.phone}</td>
-                    <td>${visitor.time}</td>
-                    <td>${visitor.type}</td>
-                `;
+                tr.innerHTML = '<td colspan="4" class="text-center">방문자가 없습니다.</td>';
                 tbody.appendChild(tr);
-            });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const tbody = document.querySelector('#today-visitors');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">데이터를 불러오는데 실패했습니다.</td></tr>';
         });
 }
 
