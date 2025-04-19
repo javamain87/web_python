@@ -284,7 +284,9 @@ def send_link(link_id):
 @admin_required
 def view_link(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
-    return render_template('admin/view_link.html', link=link)
+    applicant = link.applicant
+    worker = link.worker
+    return render_template('admin/view_link.html', link=link, applicant=applicant, worker=worker)
 
 @bp.route('/public/link/<link_code>')
 def public_view_link(link_code):
