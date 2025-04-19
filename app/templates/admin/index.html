@@ -200,12 +200,20 @@
                                 <th>No.</th>
                                 <th>이름</th>
                                 <th>연락처</th>
-                                <th>계좌번호</th>
-                                <th>최근 활동</th>
-                                <th>활동 시간</th>
+                                <th>방문 시간</th>
+                                <th>유형</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="today-visitors">
+                            <template id="visitor-row-template">
+                                <tr>
+                                    <td>${id}</td>
+                                    <td>${name}</td>
+                                    <td>${phone}</td>
+                                    <td>${time}</td>
+                                    <td>${type}</td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -274,7 +282,7 @@ function updateVisitorsList() {
     fetch('/admin/api/today_visitors')
         .then(response => response.json())
         .then(data => {
-            const tbody = document.querySelector('#visitors-table tbody');
+            const tbody = document.querySelector('#today-visitors');
             tbody.innerHTML = '';
             data.forEach(visitor => {
                 const tr = document.createElement('tr');
@@ -282,9 +290,8 @@ function updateVisitorsList() {
                     <td>${visitor.id}</td>
                     <td>${visitor.name}</td>
                     <td>${visitor.phone}</td>
-                    <td>${visitor.account || '미등록'}</td>
-                    <td>${visitor.last_action}</td>
-                    <td>${visitor.last_activity_time}</td>
+                    <td>${visitor.time}</td>
+                    <td>${visitor.type}</td>
                 `;
                 tbody.appendChild(tr);
             });

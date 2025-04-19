@@ -319,12 +319,24 @@ def visitor_stats():
         stats = []
         for i in range(6, -1, -1):
             date = datetime.utcnow().date() - timedelta(days=i)
-            count = WorkLog.query.filter(
+            
+            # Get WorkLog count
+            work_count = WorkLog.query.filter(
                 func.date(WorkLog.created_at) == date
             ).distinct(WorkLog.worker_id).count()
+            
+            # Get AccessLog count for link_login
+            access_count = AccessLog.query.filter(
+                func.date(AccessLog.created_at) == date,
+                AccessLog.action == 'link_login'
+            ).distinct(AccessLog.user_id).count()
+            
+            # Total count for the day
+            total_count = work_count + access_count
+            
             stats.append({
                 'date': date.strftime('%Y-%m-%d'),
-                'count': count
+                'count': total_count
             })
         return {'stats': stats}
     except Exception as e:
@@ -337,19 +349,45 @@ def visitor_stats():
 def today_visitors():
     try:
         today = datetime.utcnow().date()
-        visitors = WorkLog.query.filter(
+        
+        # Get WorkLog visitors
+        work_visitors = WorkLog.query.filter(
             func.date(WorkLog.created_at) == today
         ).distinct(WorkLog.worker_id).all()
         
+        # Get AccessLog visitors with link_login action
+        access_visitors = AccessLog.query.filter(
+            func.date(AccessLog.created_at) == today,
+            AccessLog.action == 'link_login'
+        ).order_by(AccessLog.created_at.desc()).all()
+        
         visitor_list = []
-        for visitor in visitors:
+        
+        # Add WorkLog visitors
+        for visitor in work_visitors:
             user = User.query.get(visitor.worker_id)
             if user:
                 visitor_list.append({
                     'name': user.username,
                     'phone': user.phone_number,
-                    'time': visitor.created_at.strftime('%H:%M')
+                    'time': visitor.created_at.strftime('%H:%M'),
+                    'type': '작업자'
                 })
+        
+        # Add AccessLog visitors
+        for visitor in access_visitors:
+            user = User.query.get(visitor.user_id)
+            if user:
+                visitor_list.append({
+                    'name': user.username,
+                    'phone': user.phone_number,
+                    'time': visitor.created_at.strftime('%H:%M'),
+                    'type': '신청자' if user.user_type == 'applicant' else '작업자'
+                })
+        
+        # Sort by time
+        visitor_list.sort(key=lambda x: x['time'], reverse=True)
+        
         return {'visitors': visitor_list}
     except Exception as e:
         current_app.logger.error(f'Error getting today\'s visitors: {str(e)}')
