@@ -11,7 +11,10 @@ def worker_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.register_link'))
+        if current_user.user_type != 'worker':
+            flash('작업자만 접근할 수 있습니다.', 'error')
+            return redirect(url_for('auth.register_link'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -19,9 +22,13 @@ def worker_required(f):
 @login_required
 @worker_required
 def index():
-    # Get all links where current user is the worker
-    links = Link.query.filter_by(worker_id=current_user.id).all()
-    return render_template('worker/index.html', links=links)
+    try:
+        # Get all links where current user is the worker
+        links = Link.query.filter_by(worker_id=current_user.id).all()
+        return render_template('worker/index.html', links=links)
+    except Exception as e:
+        flash('대시보드를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('auth.register_link'))
 
 @bp.route('/link/<link_code>')
 @login_required

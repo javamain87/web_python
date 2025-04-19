@@ -10,10 +10,10 @@ def applicant_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('auth.login'))
-        if current_user.is_administrator():
-            flash('신청자만 접근할 수 있습니다.', 'danger')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.register_link'))
+        if current_user.user_type != 'applicant':
+            flash('신청자만 접근할 수 있습니다.', 'error')
+            return redirect(url_for('auth.register_link'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -21,9 +21,13 @@ def applicant_required(f):
 @login_required
 @applicant_required
 def index():
-    # Get all links where current user is the applicant
-    links = Link.query.filter_by(applicant_id=current_user.id).all()
-    return render_template('applicant/index.html', links=links)
+    try:
+        # Get all links where current user is the applicant
+        links = Link.query.filter_by(applicant_id=current_user.id).all()
+        return render_template('applicant/index.html', links=links)
+    except Exception as e:
+        flash('대시보드를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('auth.register_link'))
 
 @bp.route('/link/<link_code>')
 @login_required
