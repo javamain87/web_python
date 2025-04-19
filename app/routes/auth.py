@@ -14,7 +14,7 @@ def login():
     if current_user.is_authenticated:
         if current_user.is_admin:
             return redirect(url_for('admin.index'))
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.register_link'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -39,21 +39,40 @@ def login():
         
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('auth.login')
+            next_page = url_for('auth.register_link')
         return redirect(next_page)
     
     return render_template('auth/login.html', title='로그인', form=form)
 
 @bp.route('/logout')
+@login_required
 def logout():
+    # 로그아웃 전에 사용자 타입 저장
+    is_admin = current_user.is_admin
+    link_code = None
+    
+    # 신청자나 작업자인 경우 현재 보고 있던 링크 코드 저장
+    if not is_admin:
+        if current_user.user_type == 'applicant':
+            link = Link.query.filter_by(applicant_id=current_user.id).first()
+        else:  # worker
+            link = Link.query.filter_by(worker_id=current_user.id).first()
+        if link:
+            link_code = link.link_code
+    
+    # 로그아웃 처리
     logout_user()
-    # 세션을 완전히 삭제
-    session.clear()
-    # 쿠키 삭제
-    response = redirect(url_for('auth.login'))
-    response.delete_cookie('session')
-    response.delete_cookie('remember_token')
-    return response
+    
+    # 관리자는 관리자 로그인 페이지로
+    if is_admin:
+        return redirect(url_for('auth.login'))
+    
+    # 신청자와 작업자는 링크 로그인 페이지로
+    if link_code:
+        return redirect(url_for('auth.register_link', link_code=link_code))
+    else:
+        # 링크를 찾을 수 없는 경우 기본 링크 로그인 페이지로
+        return redirect(url_for('auth.register_link'))
 
 @bp.route('/register_link/<link_code>', methods=['GET', 'POST'])
 def register_link(link_code):

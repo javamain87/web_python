@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from config import config, Config
 from dotenv import load_dotenv
 import os
@@ -39,12 +39,21 @@ def create_app(config_name=None):
         return User.query.get(int(user_id))
     
     # 블루프린트 등록
-    from app.routes import auth, admin, applicant, worker, main
+    from app.routes import auth, admin, applicant, worker
     app.register_blueprint(auth.bp)
     app.register_blueprint(admin.bp)
     app.register_blueprint(applicant.bp)
     app.register_blueprint(worker.bp)
-    app.register_blueprint(main.bp)
+    
+    # 기본 URL 라우트 설정
+    @app.route('/')
+    def index():
+        if current_user.is_authenticated:
+            if current_user.is_admin:
+                return redirect(url_for('admin.index'))
+            else:
+                return redirect(url_for('auth.register_link'))
+        return redirect(url_for('auth.register_link'))
     
     # 데이터베이스 마이그레이션 실행
     with app.app_context():
