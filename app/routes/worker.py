@@ -13,13 +13,12 @@ def worker_required(f):
         if not current_user.is_authenticated:
             return redirect(url_for('auth.register_link'))
         if current_user.user_type != 'worker':
-            flash('작업자만 접근할 수 있습니다.', 'error')
+            flash('Only workers can access this page.', 'error')
             return redirect(url_for('auth.register_link'))
         return f(*args, **kwargs)
     return decorated_function
 
 @bp.route('/')
-@login_required
 @worker_required
 def index():
     try:
@@ -27,17 +26,16 @@ def index():
         links = Link.query.filter_by(worker_id=current_user.id).all()
         return render_template('worker/index.html', links=links)
     except Exception as e:
-        flash('대시보드를 불러오는 중 오류가 발생했습니다.', 'error')
+        flash('Error loading dashboard.', 'error')
         return redirect(url_for('auth.register_link'))
 
 @bp.route('/link/<link_code>')
-@login_required
 @worker_required
 def view_link(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
     
     if not link.is_active:
-        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
+        flash('This link is no longer available.', 'error')
         return redirect(url_for('auth.register_link'))
     
     # 작업 로그 가져오기 (최신순으로 정렬)
@@ -48,47 +46,45 @@ def view_link(link_code):
                          work_logs=work_logs)
 
 @bp.route('/link/<link_code>/update_account', methods=['POST'])
-@login_required
 @worker_required
 def update_account(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
     
     if not link.is_active:
-        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
-        return redirect(url_for('auth.login'))
+        flash('This link is no longer available.', 'error')
+        return redirect(url_for('auth.register_link'))
     
     account_number = request.form.get('account_number')
     if not account_number:
-        flash('계좌번호를 입력해주세요.', 'error')
+        flash('Please enter your account number.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
     
     # 계좌번호 업데이트
     link.worker.account_number = account_number
     db.session.commit()
     
-    flash('계좌번호가 업데이트되었습니다.', 'success')
+    flash('Account number has been updated.', 'success')
     return redirect(url_for('worker.view_link', link_code=link_code))
 
 @bp.route('/link/<link_code>/create_work_log', methods=['POST'])
-@login_required
 @worker_required
 def create_work_log(link_code):
     link = Link.query.filter_by(link_code=link_code).first_or_404()
     if not link.is_active:
-        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
-        return redirect(url_for('main.index'))
+        flash('This link is no longer available.', 'error')
+        return redirect(url_for('auth.register_link'))
 
     work_date = request.form.get('work_date')
     description = request.form.get('description')
 
     if not work_date or not description:
-        flash('작업 날짜와 작업 내용을 모두 입력해주세요.', 'error')
+        flash('Please enter both work date and description.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
 
     try:
         work_date = datetime.strptime(work_date, '%Y-%m-%d').date()
     except ValueError:
-        flash('올바른 날짜 형식이 아닙니다.', 'error')
+        flash('Invalid date format.', 'error')
         return redirect(url_for('worker.view_link', link_code=link_code))
 
     work_log = WorkLog(
@@ -110,5 +106,5 @@ def create_work_log(link_code):
     
     db.session.commit()
 
-    flash('작업 내용이 저장되었습니다.', 'success')
+    flash('Work log has been saved.', 'success')
     return redirect(url_for('worker.view_link', link_code=link_code)) 
