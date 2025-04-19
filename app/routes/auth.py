@@ -23,6 +23,11 @@ def login():
             flash('이름 또는 비밀번호가 올바르지 않습니다.', 'error')
             return redirect(url_for('auth.login'))
         
+        # 관리자만 로그인 페이지를 통해 접속 가능
+        if not user.is_admin:
+            flash('관리자만 로그인 페이지를 통해 접속할 수 있습니다.', 'error')
+            return redirect(url_for('auth.login'))
+        
         login_user(user, remember=form.remember_me.data)
         
         # 접속 로그 기록
@@ -34,13 +39,7 @@ def login():
         db.session.add(access_log)
         db.session.commit()
         
-        if user.is_admin:
-            return redirect(url_for('admin.index'))
-        
-        next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('auth.register_link')
-        return redirect(next_page)
+        return redirect(url_for('admin.index'))
     
     return render_template('auth/login.html', title='로그인', form=form)
 
@@ -80,14 +79,11 @@ def register_link(link_code):
     if link_code is None:
         return render_template('auth/register_link.html', link=None)
         
-    link = Link.query.filter_by(link_code=link_code).first()
-    if not link:
-        flash('Invalid link code.', 'error')
-        return render_template('auth/register_link.html', link=None)
+    link = Link.query.filter_by(link_code=link_code).first_or_404()
     
     if not link.is_active:
-        flash('This link is no longer available.', 'error')
-        return render_template('auth/register_link.html', link=None)
+        flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
+        return redirect(url_for('auth.register_link'))
     
     if request.method == 'POST':
         name = request.form.get('name')
@@ -95,7 +91,7 @@ def register_link(link_code):
         password = request.form.get('password')
         
         if not name or not password or not phone:
-            flash('Please enter your name, phone number, and password.', 'error')
+            flash('이름, 전화번호, 비밀번호를 모두 입력해주세요.', 'error')
             return render_template('auth/register_link.html', link=link)
         
         # 이름과 전화번호, 비밀번호 검증
@@ -125,9 +121,9 @@ def register_link(link_code):
                 else:
                     return redirect(url_for('worker.view_link', link_code=link_code))
             else:
-                flash('User information not found.', 'error')
+                flash('사용자 정보를 찾을 수 없습니다.', 'error')
         else:
-            flash('Name, phone number, or password does not match.', 'error')
+            flash('이름, 전화번호 또는 비밀번호가 일치하지 않습니다.', 'error')
             return render_template('auth/register_link.html', link=link)
     
     return render_template('auth/register_link.html', link=link)
