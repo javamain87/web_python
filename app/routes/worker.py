@@ -31,7 +31,7 @@ def view_link(link_code):
     
     if not link.is_active:
         flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('auth.register_link'))
     
     # 작업 로그 가져오기 (최신순으로 정렬)
     work_logs = WorkLog.query.filter_by(link_id=link.id).order_by(WorkLog.created_at.desc()).all()

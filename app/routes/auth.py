@@ -74,20 +74,24 @@ def logout():
         # 링크를 찾을 수 없는 경우 기본 링크 로그인 페이지로
         return redirect(url_for('auth.register_link'))
 
+@bp.route('/register_link', defaults={'link_code': None})
 @bp.route('/register_link/<link_code>', methods=['GET', 'POST'])
 def register_link(link_code):
+    if link_code is None:
+        return render_template('auth/register_link.html', link=None)
+        
     link = Link.query.filter_by(link_code=link_code).first_or_404()
     
     if not link.is_active:
         flash('이 링크는 더 이상 사용할 수 없습니다.', 'error')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.register_link'))
     
     if request.method == 'POST':
         name = request.form.get('name')
-        phone = request.form.get('phone')  # 전화번호 추가
+        phone = request.form.get('phone')
         password = request.form.get('password')
         
-        if not name or not password or not phone:  # 전화번호 체크 추가
+        if not name or not password or not phone:
             flash('이름, 전화번호, 비밀번호를 모두 입력해주세요.', 'error')
             return render_template('auth/register_link.html', link=link)
         
@@ -102,7 +106,17 @@ def register_link(link_code):
                 user = link.worker
             
             if user:
-                login_user(user)  # 사용자 로그인
+                login_user(user)
+                
+                # 접속 로그 기록
+                access_log = AccessLog(
+                    user_id=user.id,
+                    action='link_login',
+                    details=f'User logged in via link from {request.remote_addr}'
+                )
+                db.session.add(access_log)
+                db.session.commit()
+                
                 if name == link.applicant_name:
                     return redirect(url_for('applicant.view_link', link_code=link_code))
                 else:
