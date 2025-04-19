@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
-from app.models import User, Link, WorkLog
+from app.models import User, Link, WorkLog, AccessLog
 from app import db
 import secrets
 from datetime import datetime, timedelta
@@ -105,6 +105,9 @@ def create_link():
                     account_number=applicant_account,
                     user_type='applicant'
                 )
+                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
+                default_password = applicant_phone[-4:]
+                applicant.set_password(default_password)
                 db.session.add(applicant)
                 db.session.flush()  # ID 생성을 위해 flush
             
@@ -117,6 +120,9 @@ def create_link():
                     account_number=worker_account,
                     user_type='worker'
                 )
+                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
+                default_password = worker_phone[-4:]
+                worker.set_password(default_password)
                 db.session.add(worker)
                 db.session.flush()  # ID 생성을 위해 flush
             
@@ -229,11 +235,11 @@ def send_link(link_id):
     
     # 신청자용 링크 생성
     applicant_link = url_for('auth.register_link', link_code=link.link_code, _external=True)
-    applicant_message = f"[아르바이트 작업일지]\n신청자 링크: {applicant_link}\n비밀번호: {link.password}"
+    applicant_message = f"[Escrow Management]\n신청자 링크: {applicant_link}\n비밀번호: {link.password}"
     
     # 작업자용 링크 생성
     worker_link = url_for('auth.register_link', link_code=link.link_code, _external=True)
-    worker_message = f"[아르바이트 작업일지]\n작업자 링크: {worker_link}\n비밀번호: {link.password}"
+    worker_message = f"[Escrow Management]\n작업자 링크: {worker_link}\n비밀번호: {link.password}"
     
     # SMS 전송
     applicant_sent = send_sms(link.applicant.phone_number, applicant_message)
@@ -295,15 +301,16 @@ def visitor_stats():
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=6)
     
-    # 일별 방문자 수 조회
+    # 일별 로그인한 사용자 수 조회 (중복 제거)
     stats = db.session.query(
-        func.date(WorkLog.created_at).label('date'),
-        func.count(WorkLog.id).label('count')
+        func.date(AccessLog.created_at).label('date'),
+        func.count(func.distinct(AccessLog.user_id)).label('count')
     ).filter(
-        WorkLog.created_at >= start_date,
-        WorkLog.created_at <= end_date
+        AccessLog.created_at >= start_date,
+        AccessLog.created_at <= end_date + timedelta(days=1),
+        AccessLog.action == 'login'
     ).group_by(
-        func.date(WorkLog.created_at)
+        func.date(AccessLog.created_at)
     ).all()
     
     # 결과를 딕셔너리로 변환
@@ -330,20 +337,34 @@ def visitor_stats():
 @login_required
 @admin_required
 def today_visitors():
-    # 오늘의 방문자 목록
+    # 오늘의 방문자 목록 (가장 최근 활동 기준)
     today = datetime.now().date()
     
+    # 서브쿼리로 각 사용자의 가장 최근 활동 시간 조회
+    latest_activities = db.session.query(
+        AccessLog.user_id,
+        func.max(AccessLog.created_at).label('latest_activity'),
+        AccessLog.action,
+        AccessLog.details
+    ).filter(
+        func.date(AccessLog.created_at) == today
+    ).group_by(
+        AccessLog.user_id
+    ).subquery()
+    
+    # 사용자 정보와 최근 활동 조회
     visitors = db.session.query(
-        WorkLog.id,
         User.username,
         User.phone_number,
-        User.account_number
+        User.account_number,
+        latest_activities.c.action,
+        latest_activities.c.details,
+        latest_activities.c.latest_activity
     ).join(
-        User, WorkLog.worker_id == User.id
-    ).filter(
-        func.date(WorkLog.created_at) == today
+        latest_activities,
+        User.id == latest_activities.c.user_id
     ).order_by(
-        WorkLog.created_at.desc()
+        latest_activities.c.latest_activity.desc()
     ).all()
     
     # 결과를 리스트로 변환
@@ -353,7 +374,10 @@ def today_visitors():
             'id': i,
             'name': visitor.username,
             'phone': visitor.phone_number,
-            'account': visitor.account_number
+            'account': visitor.account_number,
+            'last_action': visitor.action,
+            'last_action_details': visitor.details,
+            'last_activity_time': visitor.latest_activity.strftime('%Y-%m-%d %H:%M:%S')
         })
     
     return jsonify(result) 

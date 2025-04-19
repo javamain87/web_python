@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}대시보드{% endblock %}
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -187,22 +187,29 @@
             <canvas id="visitorChart"></canvas>
         </div>
 
-        <!-- 방문자 목록 테이블 -->
-        <div class="table-container">
-            <h2>오늘의 방문자 목록</h2>
-            <table id="visitorTable" class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>NO.</th>
-                        <th>이름</th>
-                        <th>전화번호</th>
-                        <th>계좌번호</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- 데이터는 JavaScript에서 동적으로 로드됩니다 -->
-                </tbody>
-            </table>
+        <!-- 오늘 방문자 목록 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">오늘 방문자 목록</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="visitors-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>이름</th>
+                                <th>연락처</th>
+                                <th>계좌번호</th>
+                                <th>최근 활동</th>
+                                <th>활동 시간</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -262,66 +269,37 @@ async function fetchVisitorStats() {
     }
 }
 
-// 방문자 목록 테이블
-let visitorTable;
-async function fetchTodayVisitors() {
-    try {
-        const response = await fetch('/admin/api/today_visitors');
-        const data = await response.json();
-        
-        if (visitorTable) {
-            visitorTable.destroy();
-        }
-        
-        // DataTables 초기화 전에 컨트롤 래퍼 추가
-        const tableContainer = document.querySelector('#visitorTable').closest('.table-container');
-        if (!tableContainer.querySelector('.dt-controls')) {
-            const controlsDiv = document.createElement('div');
-            controlsDiv.className = 'dt-controls';
-            tableContainer.insertBefore(controlsDiv, tableContainer.firstChild);
-        }
-        
-        visitorTable = $('#visitorTable').DataTable({
-            data: data,
-            columns: [
-                { data: 'id' },
-                { data: 'name' },
-                { data: 'phone' },
-                { data: 'account' }
-            ],
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/ko.json',
-                lengthMenu: "_MENU_",
-                info: "총 _TOTAL_개 중 _START_~_END_",
-                infoEmpty: "데이터가 없습니다",
-                emptyTable: "데이터가 없습니다",
-                search: "검색:",
-                paginate: {
-                    first: "처음",
-                    last: "마지막",
-                    next: "다음",
-                    previous: "이전"
-                }
-            },
-            order: [[0, 'desc']],
-            pageLength: 10,
-            dom: "<'dt-controls'<'dataTables_length'l><'dataTables_filter'f>>rtip",
-            lengthMenu: [[10, 25, 50, -1], ['10개', '25개', '50개', '전체']]  // select 박스 옵션 커스터마이징
+// 방문자 목록 업데이트
+function updateVisitorsList() {
+    fetch('/admin/api/today_visitors')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#visitors-table tbody');
+            tbody.innerHTML = '';
+            data.forEach(visitor => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${visitor.id}</td>
+                    <td>${visitor.name}</td>
+                    <td>${visitor.phone}</td>
+                    <td>${visitor.account || '미등록'}</td>
+                    <td>${visitor.last_action}</td>
+                    <td>${visitor.last_activity_time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         });
-    } catch (error) {
-        console.error('오늘의 방문자 데이터를 가져오는 중 오류 발생:', error);
-    }
 }
 
 // 페이지 로드 시 데이터 가져오기
 document.addEventListener('DOMContentLoaded', function() {
     fetchVisitorStats();
-    fetchTodayVisitors();
+    updateVisitorsList();
     
     // 5분마다 데이터 갱신
     setInterval(() => {
         fetchVisitorStats();
-        fetchTodayVisitors();
+        updateVisitorsList();
     }, 5 * 60 * 1000);
 });
 </script>

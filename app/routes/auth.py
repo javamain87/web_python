@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, Link, UserType
+from app.models import User, Link, UserType, AccessLog
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
@@ -24,6 +24,15 @@ def login():
             return redirect(url_for('auth.login'))
         
         login_user(user, remember=form.remember_me.data)
+        
+        # 접속 로그 기록
+        access_log = AccessLog(
+            user_id=user.id,
+            action='login',
+            details=f'User logged in from {request.remote_addr}'
+        )
+        db.session.add(access_log)
+        db.session.commit()
         
         if user.is_admin:
             return redirect(url_for('admin.index'))

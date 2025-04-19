@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from app.models import Link, WorkLog
+from app.models import Link, WorkLog, AccessLog
 from app import db
 from functools import wraps
 from datetime import datetime
@@ -88,9 +88,19 @@ def create_work_log(link_code):
         link_id=link.id,
         work_date=work_date,
         description=description,
-        worker_id=current_user.id
+        worker_id=current_user.id,
+        action='create'
     )
     db.session.add(work_log)
+
+    # 접속 로그 기록
+    access_log = AccessLog(
+        user_id=current_user.id,
+        action='work_log_create',
+        details=f'Created work log for date {work_date}'
+    )
+    db.session.add(access_log)
+    
     db.session.commit()
 
     flash('작업 내용이 저장되었습니다.', 'success')
