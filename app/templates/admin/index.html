@@ -207,11 +207,11 @@
                         <tbody id="today-visitors">
                             <template id="visitor-row-template">
                                 <tr>
-                                    <td>${id}</td>
-                                    <td>${name}</td>
-                                    <td>${phone}</td>
-                                    <td>${time}</td>
-                                    <td>${type}</td>
+                                    <td>${visitor.no}</td>
+                                    <td>${visitor.name}</td>
+                                    <td>${visitor.phone}</td>
+                                    <td>${visitor.time}</td>
+                                    <td>${visitor.type}</td>
                                 </tr>
                             </template>
                         </tbody>
@@ -289,6 +289,7 @@ function updateVisitorsList() {
                 data.visitors.forEach(visitor => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
+                        <td>${visitor.no}</td>
                         <td>${visitor.name}</td>
                         <td>${visitor.phone}</td>
                         <td>${visitor.time}</td>

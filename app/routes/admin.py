@@ -362,32 +362,42 @@ def today_visitors():
             AccessLog.action == 'link_login'
         ).order_by(AccessLog.created_at.desc()).all()
         
-        visitor_list = []
+        # 중복 제거를 위한 딕셔너리
+        visitor_dict = {}
         
         # Add WorkLog visitors
         for visitor in work_visitors:
             user = User.query.get(visitor.worker_id)
             if user:
-                visitor_list.append({
-                    'name': user.username,
-                    'phone': user.phone_number,
-                    'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
-                    'type': '작업자'
-                })
+                key = f"{user.username}_{user.phone_number}"
+                if key not in visitor_dict:
+                    visitor_dict[key] = {
+                        'name': user.username,
+                        'phone': user.phone_number,
+                        'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
+                        'type': '작업자'
+                    }
         
         # Add AccessLog visitors
         for visitor in access_visitors:
             user = User.query.get(visitor.user_id)
             if user:
-                visitor_list.append({
-                    'name': user.username,
-                    'phone': user.phone_number,
-                    'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
-                    'type': '신청자' if user.user_type == 'applicant' else '작업자'
-                })
+                key = f"{user.username}_{user.phone_number}"
+                if key not in visitor_dict:
+                    visitor_dict[key] = {
+                        'name': user.username,
+                        'phone': user.phone_number,
+                        'time': (visitor.created_at + timedelta(hours=9)).strftime('%H:%M'),
+                        'type': '신청자' if user.user_type == 'applicant' else '작업자'
+                    }
         
-        # Sort by time
+        # Convert dictionary to list and sort by time
+        visitor_list = list(visitor_dict.values())
         visitor_list.sort(key=lambda x: x['time'], reverse=True)
+        
+        # Add row numbers
+        for i, visitor in enumerate(visitor_list, 1):
+            visitor['no'] = i
         
         return {'visitors': visitor_list}
     except Exception as e:
