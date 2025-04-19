@@ -250,14 +250,18 @@ async function fetchVisitorStats() {
         if (visitorChart) {
             visitorChart.destroy();
         }
+
+        // API 응답에서 labels와 data 배열 생성
+        const labels = data.stats.map(item => item.date);
+        const visitCounts = data.stats.map(item => item.count);
         
         visitorChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [{
                     label: '방문자 수',
-                    data: data.data,
+                    data: visitCounts,
                     backgroundColor: 'rgba(54, 162, 235, 0.5)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
@@ -267,7 +271,10 @@ async function fetchVisitorStats() {
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 }
             }
