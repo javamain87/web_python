@@ -35,4 +35,6 @@ class LinkForm(FlaskForm):
     applicant_phone = StringField('신청자 전화번호', validators=[DataRequired()])
     worker_name = StringField('작업자 이름', validators=[DataRequired()])
     worker_phone = StringField('작업자 전화번호', validators=[DataRequired()])
+    password = StringField('링크 비밀번호', validators=[DataRequired()])
+    is_active = BooleanField('활성화 상태', default=True)
     submit = SubmitField('링크 생성') 

@@ -106,7 +106,10 @@ def create_link():
             applicant_phone=form.applicant_phone.data,
             worker_name=form.worker_name.data,
             worker_phone=form.worker_phone.data,
-            link_type='work'
+            password=form.password.data,
+            is_active=form.is_active.data,
+            link_type='work',
+            admin_id=current_user.id
         )
         
         db.session.add(link)
@@ -115,7 +118,7 @@ def create_link():
         # 링크 URL 생성
         link_url = url_for('main.view_link', link_code=link_code, _external=True)
         
-        flash(f'링크가 생성되었습니다. 링크: {link_url}', 'success')
+        flash(f'링크가 생성되었습니다. 링크: {link_url}\n비밀번호: {form.password.data}', 'success')
         return redirect(url_for('admin.links'))
     
     return render_template('admin/create_link.html', form=form)
