@@ -3,24 +3,63 @@
 {% block title %}새 링크 생성{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">Create Link</h5>
+                <div class="card-header">
+                    <h3 class="mb-0">새 링크 생성</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin.create_link') }}">
+                    <form method="POST">
                         <div class="mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <h4>신청자 정보</h4>
+                            <div class="mb-3">
+                                <label for="applicant_name" class="form-label">이름 *</label>
+                                <input type="text" class="form-control" id="applicant_name" name="applicant_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="applicant_phone" class="form-label">전화번호 *</label>
+                                <input type="tel" class="form-control" id="applicant_phone" name="applicant_phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="applicant_account" class="form-label">계좌번호</label>
+                                <input type="text" class="form-control" id="applicant_account" name="applicant_account">
+                            </div>
                         </div>
+
                         <div class="mb-3">
-                            <label for="phone_number" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                            <h4>작업자 정보</h4>
+                            <div class="mb-3">
+                                <label for="worker_name" class="form-label">이름 *</label>
+                                <input type="text" class="form-control" id="worker_name" name="worker_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="worker_phone" class="form-label">전화번호 *</label>
+                                <input type="tel" class="form-control" id="worker_phone" name="worker_phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="worker_account" class="form-label">계좌번호</label>
+                                <input type="text" class="form-control" id="worker_account" name="worker_account">
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Create Link</button>
+
+                        <div class="mb-3">
+                            <h4>링크 설정</h4>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">비밀번호 *</label>
+                                <input type="text" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">활성화</label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">링크 생성</button>
+                            <a href="{{ url_for('admin.links') }}" class="btn btn-secondary">취소</a>
+                        </div>
                     </form>
                 </div>
             </div>
