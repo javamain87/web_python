@@ -107,42 +107,86 @@ def links():
 @login_required
 @admin_required
 def create_link():
-    form = LinkForm()
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        # 폼 데이터 가져오기
+        applicant_name = request.form.get('applicant_name')
+        applicant_phone = request.form.get('applicant_phone')
+        applicant_account = request.form.get('applicant_account')  # 계좌번호 추가
+        worker_name = request.form.get('worker_name')
+        worker_phone = request.form.get('worker_phone')
+        worker_account = request.form.get('worker_account')  # 계좌번호 추가
+        password = request.form.get('password')
+        is_active = request.form.get('is_active') == 'on'
+        
+        # 필수 필드 확인
+        if not all([applicant_name, applicant_phone, worker_name, worker_phone, password]):
+            flash('필수 필드를 모두 입력해주세요.', 'error')
+            return render_template('admin/create_link.html')
+        
         try:
-            # Generate a unique link code
-            while True:
-                link_code = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))
-                if not Link.query.filter_by(code=link_code).first():
-                    break
-
-            # Create new link
+            # 신청자 생성 또는 조회
+            applicant = User.query.filter_by(phone_number=applicant_phone).first()
+            if not applicant:
+                applicant = User(
+                    username=applicant_name,
+                    phone_number=applicant_phone,
+                    account_number=applicant_account,
+                    user_type='applicant'
+                )
+                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
+                default_password = applicant_phone[-4:]
+                applicant.set_password(default_password)
+                db.session.add(applicant)
+                db.session.flush()  # ID 생성을 위해 flush
+            
+            # 작업자 생성 또는 조회
+            worker = User.query.filter_by(phone_number=worker_phone).first()
+            if not worker:
+                worker = User(
+                    username=worker_name,
+                    phone_number=worker_phone,
+                    account_number=worker_account,
+                    user_type='worker'
+                )
+                # 기본 비밀번호 설정 (전화번호 뒷 4자리)
+                default_password = worker_phone[-4:]
+                worker.set_password(default_password)
+                db.session.add(worker)
+                db.session.flush()  # ID 생성을 위해 flush
+            
+            # 링크 코드 생성
+            link_code = secrets.token_urlsafe(16)
+            
+            # 링크 생성
             link = Link(
-                code=link_code,
-                name=form.name.data,
-                phone_number=form.phone_number.data,
-                created_by=current_user.id,
-                expires_at=datetime.utcnow() + timedelta(days=1)
+                link_code=link_code,
+                applicant_id=applicant.id,
+                worker_id=worker.id,
+                applicant_name=applicant_name,
+                applicant_phone=applicant_phone,
+                worker_name=worker_name,
+                worker_phone=worker_phone,
+                password=password,
+                is_active=is_active,
+                link_type='work',
+                admin_id=current_user.id
             )
+            
             db.session.add(link)
             db.session.commit()
 
-            # Log the link creation
-            access_log = AccessLog(
-                user_id=current_user.id,
-                action='create_link',
-                details=f'Created link: {link_code}'
-            )
-            db.session.add(access_log)
-            db.session.commit()
+            # 링크 URL 생성
+            link_url = url_for('admin.view_link', link_code=link_code, _external=True)
 
-            flash('Link created successfully!', 'success')
-            return redirect(url_for('admin.index'))
+            flash(f'링크가 생성되었습니다.\n링크: {link_url}\n비밀번호: {password}', 'success')
+            return redirect(url_for('admin.links'))
+            
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating link: {str(e)}', 'danger')
-            current_app.logger.error(f'Error creating link: {str(e)}')
-    return render_template('admin/create_link.html', form=form)
+            flash(f'링크 생성 중 오류가 발생했습니다: {str(e)}', 'error')
+            return render_template('admin/create_link.html')
+    
+    return render_template('admin/create_link.html')
 
 @bp.route('/links/<int:link_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -188,22 +232,27 @@ def edit_link(link_id):
 def delete_link(link_id):
     link = Link.query.get_or_404(link_id)
     try:
-        # Log the link deletion
-        access_log = AccessLog(
-            user_id=current_user.id,
-            action='delete_link',
-            details=f'Deleted link: {link.code}'
+        # Create work log
+        log = WorkLog(
+            link=link,
+            work_date=datetime.now().date(),
+            content='Link deleted',
+            action='delete',
+            details=f'Deleted by {current_user.username}',
+            worker_id=link.worker_id
         )
-        db.session.add(access_log)
+        db.session.add(log)
         
+        # Delete link
         db.session.delete(link)
         db.session.commit()
-        flash('Link deleted successfully!', 'success')
+        
+        flash('링크가 성공적으로 삭제되었습니다.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting link: {str(e)}', 'danger')
-        current_app.logger.error(f'Error deleting link: {str(e)}')
-    return redirect(url_for('admin.index'))
+        flash(f'에러가 발생했습니다: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.links'))
 
 @bp.route('/links/<int:link_id>/send', methods=['GET'])
 @login_required
@@ -234,7 +283,7 @@ def send_link(link_id):
 @login_required
 @admin_required
 def view_link(link_code):
-    link = Link.query.filter_by(code=link_code).first_or_404()
+    link = Link.query.filter_by(link_code=link_code).first_or_404()
     return render_template('admin/view_link.html', link=link)
 
 @bp.route('/public/link/<link_code>')
